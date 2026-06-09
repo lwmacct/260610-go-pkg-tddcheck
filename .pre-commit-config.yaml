@@ -1,0 +1,20 @@
+default_stages: [pre-commit]
+fail_fast: true
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=512"]
+
+  - repo: local
+    hooks:
+      - id: tddcheck
+        name: tddcheck
+        entry: go run ./cmd/tddcheck --staged
+        language: system
+        pass_filenames: false
+        types: [go]

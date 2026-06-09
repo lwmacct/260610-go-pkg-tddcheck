@@ -1,0 +1,64 @@
+version: "2"
+
+linters:
+  default: all
+  disable:
+    - depguard
+    - wrapcheck
+    - exhaustruct
+    - ireturn
+    - varnamelen
+    - nlreturn
+    - wsl_v5
+    - funlen
+    - gocognit
+    - cyclop
+    - lll
+    - godox
+    - godot
+    - mnd
+    - err113
+    - gochecknoglobals
+    - gochecknoinits
+    - noinlineerr
+    - paralleltest
+    - testpackage
+    - arangolint
+    - ginkgolinter
+    - zerologlint
+    - loggercheck
+    - spancheck
+    - promlinter
+    - protogetter
+    - gosmopolitan
+    - wsl
+    - gomodguard
+    - revive
+    - errname
+    - goprintffuncname
+    - tagalign
+    - tagliatelle
+    - goconst
+
+  settings:
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment
+    misspell:
+      locale: US
+    nakedret:
+      max-func-lines: 30
+    exhaustive:
+      default-signifies-exhaustive: true
+    nestif:
+      min-complexity: 3
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

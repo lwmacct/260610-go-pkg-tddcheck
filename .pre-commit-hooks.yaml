@@ -1,0 +1,7 @@
+- id: tddcheck
+  name: tddcheck
+  description: Enforce Go TDD conventions with AST checks.
+  entry: tddcheck --staged
+  language: golang
+  types: [go]
+  pass_filenames: false
