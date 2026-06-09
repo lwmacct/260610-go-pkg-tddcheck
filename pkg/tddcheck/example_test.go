@@ -1,7 +1,6 @@
 package tddcheck_test
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -41,9 +40,9 @@ func TestParse(t *testing.T) {
 		return
 	}
 
-	result, err := tddcheck.Check(context.Background(), tddcheck.WithRoot(root))
-	if err != nil {
-		fmt.Println(err)
+	result := tddcheck.Check(tddcheck.WithRoot(root))
+	if result.Err != nil {
+		fmt.Println(result.Err)
 		return
 	}
 

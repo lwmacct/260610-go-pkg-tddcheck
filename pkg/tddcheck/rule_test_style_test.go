@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestRuleNoSkippedOrEmptyTestsReportsEmptyTests(t *testing.T) {
+func TestTestsAreNotEmptyReportsEmptyTestFunctions(t *testing.T) {
 	project := scanFixture(t, map[string]string{
 		"calc.go": `package calc
 
@@ -23,7 +23,7 @@ func TestSkipped(t *testing.T) {
 `,
 	})
 
-	findings, err := RuleNoSkippedOrEmptyTests().Check(context.Background(), project)
+	findings, err := TestsAreNotEmpty().Check(context.Background(), project)
 	requireNoError(t, err)
 	if len(findings) != 1 {
 		t.Fatalf("expected one finding, got %#v", findings)

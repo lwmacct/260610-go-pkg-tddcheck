@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -36,12 +35,12 @@ func run() int {
 		return 0
 	}
 
-	result, err := tddcheck.Check(context.Background(),
+	result := tddcheck.Check(
 		tddcheck.WithRoot(root),
-		tddcheck.WithStagedOnly(stagedOnly),
+		tddcheck.WithChanged(stagedOnly),
 	)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "tddcheck:", err)
+	if result.Err != nil {
+		fmt.Fprintln(os.Stderr, "tddcheck:", result.Err)
 		return 2
 	}
 

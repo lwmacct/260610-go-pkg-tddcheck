@@ -6,9 +6,9 @@ import (
 	"strings"
 )
 
-// RuleChangedCodeNeedsTest requires staged production Go changes to include a
-// staged test file in the same directory.
-func RuleChangedCodeNeedsTest() Rule {
+// ChangedCodeHasTests requires staged production Go changes to include a staged
+// test file in the same directory.
+func ChangedCodeHasTests() Rule {
 	return ruleFunc{
 		name: "changed-code-needs-test",
 		check: func(ctx context.Context, project *Project) ([]Finding, error) {

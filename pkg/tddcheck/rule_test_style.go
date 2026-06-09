@@ -2,9 +2,9 @@ package tddcheck
 
 import "context"
 
-// RuleNoSkippedOrEmptyTests rejects empty tests. It also rejects skipped tests
-// in production files, while allowing environment guards in _test.go files.
-func RuleNoSkippedOrEmptyTests() Rule {
+// TestsAreNotEmpty rejects empty tests. It also rejects skipped tests in
+// production files, while allowing environment guards in _test.go files.
+func TestsAreNotEmpty() Rule {
 	return ruleFunc{
 		name: "no-skipped-or-empty-tests",
 		check: func(ctx context.Context, project *Project) ([]Finding, error) {

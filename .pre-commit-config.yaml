@@ -14,7 +14,7 @@ repos:
     hooks:
       - id: tddcheck
         name: tddcheck
-        entry: go run ./cmd/tddcheck --staged
+        entry: env GOWORK=off go test ./... -run TestTDDPolicy
         language: system
         pass_filenames: false
         types: [go]

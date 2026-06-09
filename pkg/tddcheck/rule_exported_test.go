@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestRuleExportedDeclsNeedTestsPassesWithCandidates(t *testing.T) {
+func TestPublicAPIsHaveTestsPassesWithCandidateTests(t *testing.T) {
 	project := scanFixture(t, map[string]string{
 		"calc.go": `package calc
 
@@ -25,14 +25,14 @@ func TestClient_Do(t *testing.T) {}
 `,
 	})
 
-	findings, err := RuleExportedDeclsNeedTests().Check(context.Background(), project)
+	findings, err := PublicAPIsHaveTests().Check(context.Background(), project)
 	requireNoError(t, err)
 	if len(findings) != 0 {
 		t.Fatalf("expected no findings, got %#v", findings)
 	}
 }
 
-func TestRuleExportedDeclsNeedTestsReportsMissingCandidates(t *testing.T) {
+func TestPublicAPIsHaveTestsReportsMissingCandidates(t *testing.T) {
 	project := scanFixture(t, map[string]string{
 		"calc.go": `package calc
 
@@ -40,7 +40,7 @@ func Parse() {}
 `,
 	})
 
-	findings, err := RuleExportedDeclsNeedTests().Check(context.Background(), project)
+	findings, err := PublicAPIsHaveTests().Check(context.Background(), project)
 	requireNoError(t, err)
 	if len(findings) != 1 {
 		t.Fatalf("expected one finding, got %#v", findings)

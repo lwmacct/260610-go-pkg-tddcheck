@@ -5,9 +5,9 @@ import (
 	"fmt"
 )
 
-// RuleExportedDeclsNeedTests requires exported production functions and methods
-// to have candidate tests in the same package.
-func RuleExportedDeclsNeedTests() Rule {
+// PublicAPIsHaveTests requires exported production functions and methods to
+// have candidate tests in the same package.
+func PublicAPIsHaveTests() Rule {
 	return ruleFunc{
 		name: "exported-decls-need-tests",
 		check: func(ctx context.Context, project *Project) ([]Finding, error) {

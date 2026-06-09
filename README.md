@@ -6,61 +6,96 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/lwmacct/260610-tddcheck)](https://goreportcard.com/report/github.com/lwmacct/260610-tddcheck)
 [![GitHub Tag](https://img.shields.io/github/v/tag/lwmacct/260610-tddcheck?sort=semver)](https://github.com/lwmacct/260610-tddcheck/tags)
 
-`tddcheck` is a Go AST based checker for enforcing observable TDD conventions
-in local development and CI.
+`tddcheck` is a Go AST based unit-test helper for enforcing observable TDD
+conventions.
 
-It cannot prove that a test was written before implementation code. It does
-enforce rules that make that workflow visible: production code changes need
-nearby test changes, exported APIs need candidate tests, and committed tests
-must not be empty or skipped.
+It cannot prove that a test was written before implementation code. It enforces
+rules that make that workflow visible: public APIs need candidate tests, test
+functions must not be empty, and optional changed-code checks can be used from
+pre-commit.
 
 ## Install
-
-```bash
-go install github.com/lwmacct/260610-tddcheck/cmd/tddcheck@latest
-```
-
-Library usage:
 
 ```bash
 go get github.com/lwmacct/260610-tddcheck/pkg/tddcheck
 ```
 
-## CLI
+## Unit Test Usage
 
-```bash
-tddcheck --root .
-tddcheck --staged
-```
-
-`--staged` reads `git diff --cached --name-only --diff-filter=ACMR` and is
-intended for pre-commit usage.
-
-## Library
+Create a normal Go test in the project that owns the policy:
 
 ```go
-result, err := tddcheck.Check(ctx,
-    tddcheck.WithRoot("."),
-    tddcheck.WithStagedOnly(true),
+package project_test
+
+import (
+    "testing"
+
+    "github.com/lwmacct/260610-tddcheck/pkg/tddcheck"
 )
-if err != nil {
-    return err
-}
-if !result.Passed {
-    fmt.Println(result.Text())
+
+func TestTDDPolicy(t *testing.T) {
+    tddcheck.Assert(t)
 }
 ```
+
+For explicit policy configuration:
+
+```go
+var policy = tddcheck.Policy{
+    Ignore: []string{
+        "gen/**",
+        "mocks/**",
+    },
+}
+
+func TestTDDPolicy(t *testing.T) {
+    policy.Assert(t)
+}
+```
+
+The root directory is auto-detected by walking up from the calling test file to
+the nearest `go.mod`. Use `WithRoot` or `Policy.Root` when a test lives outside
+the module it checks.
 
 ## Rules
 
-- `changed-code-needs-test`: staged production Go changes require a staged test
-  file in the same package directory.
-- `exported-decls-need-tests`: exported production functions and methods on
-  exported receiver types require candidate tests.
-- `no-skipped-or-empty-tests`: test functions must not be empty or contain
-  `t.Skip`, `t.Skipf`, or `t.SkipNow`.
+Default unit-test rules:
+
+- `PublicAPIsHaveTests`: exported production functions and methods on exported
+  receiver types require candidate tests.
+- `TestsAreNotEmpty`: test functions must not be empty.
+
+Changed-code rule:
+
+- `ChangedCodeHasTests`: staged production Go changes require a staged test file
+  in the same package directory.
+
+Enable changed-code checks explicitly:
+
+```go
+func TestChangedCodeHasTests(t *testing.T) {
+    tddcheck.Assert(t, tddcheck.WithChanged(true))
+}
+```
 
 ## pre-commit
+
+The preferred hook runs the policy as a normal unit test:
+
+```yaml
+repos:
+  - repo: local
+    hooks:
+      - id: tddcheck
+        name: tddcheck
+        entry: go test ./... -run TestTDDPolicy
+        language: system
+        pass_filenames: false
+        types: [go]
+```
+
+The repository also publishes a thin CLI hook for projects that do not want to
+add a policy test:
 
 ```yaml
 repos:
@@ -68,6 +103,14 @@ repos:
     rev: v0.1.0
     hooks:
       - id: tddcheck
+```
+
+## CLI
+
+```bash
+go install github.com/lwmacct/260610-tddcheck/cmd/tddcheck@latest
+tddcheck --root .
+tddcheck --staged
 ```
 
 ## License
