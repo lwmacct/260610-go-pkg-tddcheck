@@ -2,13 +2,14 @@ package dto
 
 import (
 	"fmt"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rulekit"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rulekit"
 )
 
 // Rules declares naming rules for module dto.go files.

@@ -2,7 +2,6 @@ package repository
 
 import (
 	"fmt"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rulekit"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -11,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rulekit"
 )
 
 // Rules declares boundary rules for module repository files.

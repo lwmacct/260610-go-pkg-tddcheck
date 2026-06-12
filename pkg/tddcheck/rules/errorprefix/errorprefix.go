@@ -2,13 +2,14 @@ package errorprefix
 
 import (
 	"fmt"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rulekit"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rulekit"
 )
 
 // Rules declares naming rules for module errors.go files.

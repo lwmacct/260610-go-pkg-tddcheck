@@ -1,9 +1,10 @@
 package errorboundary
 
 import (
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/testkit"
 	"reflect"
 	"testing"
+
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/testkit"
 )
 
 func TestRulesBoundaryViolations(t *testing.T) {

@@ -48,6 +48,8 @@ func TestLayerDependencies(t *testing.T) {
 
 目标项目中更推荐把需要单独运行的检测整理成 `TestRules/<rule>` 子测试，例如 `internal/testutil/tddcheck/tddcheck_test.go`：
 
+表格里保存规则对象，不保存 `func(*testing.T)` 匿名函数；这样可以避开 `golangci-lint` 的 `thelper` 规则误判。
+
 ```go
 package tddcheck_test
 
@@ -59,18 +61,24 @@ import (
     "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/layer"
 )
 
+type assertRule interface {
+    Assert(*testing.T)
+}
+
 func TestRules(t *testing.T) {
     tests := []struct {
-        name   string
-        assert func(*testing.T)
+        name string
+        rule assertRule
     }{
-        {"layer", func(t *testing.T) { layer.New("internal").Assert(t) }},
-        {"dto", func(t *testing.T) { dto.New("internal").Assert(t) }},
-        {"database-test", func(t *testing.T) { database.New(".").Assert(t) }},
+        {"layer", layer.New("internal")},
+        {"dto", dto.New("internal")},
+        {"database-test", database.New(".")},
     }
 
     for _, test := range tests {
-        t.Run(test.name, test.assert)
+        t.Run(test.name, func(t *testing.T) {
+            test.rule.Assert(t)
+        })
     }
 }
 ```

@@ -2,13 +2,14 @@ package packagename
 
 import (
 	"fmt"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rulekit"
 	"go/parser"
 	"go/token"
 	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rulekit"
 )
 
 // Rules declares mechanical package naming rules.

@@ -2,12 +2,13 @@ package cqrs
 
 import (
 	"fmt"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rulekit"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"strings"
 	"testing"
+
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rulekit"
 )
 
 // Rules declares naming rules for module cqrs.go files.

@@ -18,3 +18,9 @@ repos:
         language: system
         pass_filenames: false
         types: [go]
+      - id: golangci-lint
+        name: golangci-lint
+        entry: env GOWORK=off golangci-lint run
+        language: system
+        pass_filenames: false
+        types: [go]

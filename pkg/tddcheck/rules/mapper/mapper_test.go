@@ -1,10 +1,11 @@
 package mapper
 
 import (
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/testkit"
 	"reflect"
 	"slices"
 	"testing"
+
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/testkit"
 )
 
 func TestRulesBoundaryViolations(t *testing.T) {
