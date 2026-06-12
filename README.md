@@ -122,6 +122,9 @@ func TestArchitecture(t *testing.T) {
 }
 ```
 
+规则覆盖范围、主流 Go/Clean Architecture 对齐情况和剩余缺口见
+[RULE_AUDIT.md](RULE_AUDIT.md)。
+
 ## 配置
 
 默认策略保留本包最初服务的分层项目约定。其他项目可以通过 `Config` 覆盖项目相关的策略部分。

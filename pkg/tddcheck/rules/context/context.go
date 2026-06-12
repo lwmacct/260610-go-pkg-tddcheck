@@ -94,13 +94,14 @@ func contextBoundaryViolationsInFile(filename string) ([]ContextBoundaryViolatio
 	}
 
 	isContextFile := filepath.Base(filename) == "context.go"
+	contextImports := contextImportNames(parsedFile)
 	if isContextFile {
-		return contextFileBoundaryViolations(fileSet, filename, parsedFile), nil
+		return contextFileBoundaryViolations(fileSet, filename, parsedFile, contextImports), nil
 	}
-	return nonContextFileBoundaryViolations(fileSet, filename, parsedFile), nil
+	return nonContextFileBoundaryViolations(fileSet, filename, parsedFile, contextImports), nil
 }
 
-func contextFileBoundaryViolations(fileSet *token.FileSet, filename string, parsedFile *ast.File) []ContextBoundaryViolation {
+func contextFileBoundaryViolations(fileSet *token.FileSet, filename string, parsedFile *ast.File, contextImports map[string]struct{}) []ContextBoundaryViolation {
 	localTypes := contextFileTypeNames(parsedFile)
 	var violations []ContextBoundaryViolation
 	for _, decl := range parsedFile.Decls {
@@ -108,7 +109,7 @@ func contextFileBoundaryViolations(fileSet *token.FileSet, filename string, pars
 		if !ok {
 			continue
 		}
-		if isContextHelperFunc(funcDecl) {
+		if isContextHelperFunc(funcDecl, contextImports) {
 			continue
 		}
 		if funcDecl.Recv != nil && contextReceiverDeclaredInFile(funcDecl.Recv, localTypes) {
@@ -124,11 +125,11 @@ func contextFileBoundaryViolations(fileSet *token.FileSet, filename string, pars
 	return violations
 }
 
-func nonContextFileBoundaryViolations(fileSet *token.FileSet, filename string, parsedFile *ast.File) []ContextBoundaryViolation {
+func nonContextFileBoundaryViolations(fileSet *token.FileSet, filename string, parsedFile *ast.File, contextImports map[string]struct{}) []ContextBoundaryViolation {
 	var violations []ContextBoundaryViolation
 	for _, decl := range parsedFile.Decls {
 		funcDecl, ok := decl.(*ast.FuncDecl)
-		if !ok || !isContextHelperFuncOutsideContextFile(funcDecl) {
+		if !ok || !isContextHelperFuncOutsideContextFile(funcDecl, contextImports) {
 			continue
 		}
 		position := fileSet.Position(funcDecl.Pos())
@@ -144,7 +145,7 @@ func nonContextFileBoundaryViolations(fileSet *token.FileSet, filename string, p
 		if !ok || selector.Sel.Name != "WithValue" {
 			return true
 		}
-		if ident, ok := selector.X.(*ast.Ident); !ok || ident.Name != "context" {
+		if ident, ok := selector.X.(*ast.Ident); !ok || !isContextImportName(ident.Name, contextImports) {
 			return true
 		}
 		position := fileSet.Position(selector.Sel.Pos())
@@ -157,6 +158,29 @@ func nonContextFileBoundaryViolations(fileSet *token.FileSet, filename string, p
 	})
 
 	return violations
+}
+
+func contextImportNames(parsedFile *ast.File) map[string]struct{} {
+	names := map[string]struct{}{"context": {}}
+	for _, importSpec := range parsedFile.Imports {
+		if strings.Trim(importSpec.Path.Value, `"`) != "context" {
+			continue
+		}
+		if importSpec.Name == nil {
+			names["context"] = struct{}{}
+			continue
+		}
+		if importSpec.Name.Name == "." || importSpec.Name.Name == "_" {
+			continue
+		}
+		names[importSpec.Name.Name] = struct{}{}
+	}
+	return names
+}
+
+func isContextImportName(name string, contextImports map[string]struct{}) bool {
+	_, ok := contextImports[name]
+	return ok
 }
 
 func contextFileTypeNames(parsedFile *ast.File) map[string]struct{} {
@@ -194,49 +218,49 @@ func contextReceiverTypeName(expr ast.Expr) string {
 	return ""
 }
 
-func isContextHelperFunc(funcDecl *ast.FuncDecl) bool {
+func isContextHelperFunc(funcDecl *ast.FuncDecl, contextImports map[string]struct{}) bool {
 	if funcDecl.Recv != nil {
 		return false
 	}
 	name := funcDecl.Name.Name
 	return strings.HasPrefix(name, "ContextWith") ||
 		strings.HasPrefix(name, "contextWith") ||
-		(strings.HasSuffix(name, "FromContext") && hasSingleContextParam(funcDecl)) ||
-		(strings.HasSuffix(name, "ContextFrom") && hasContextParam(funcDecl)) ||
-		(strings.HasSuffix(name, "Context") && hasContextParam(funcDecl))
+		(strings.HasSuffix(name, "FromContext") && hasSingleContextParam(funcDecl, contextImports)) ||
+		(strings.HasSuffix(name, "ContextFrom") && hasContextParam(funcDecl, contextImports)) ||
+		(strings.HasSuffix(name, "Context") && hasContextParam(funcDecl, contextImports))
 }
 
-func isContextHelperFuncOutsideContextFile(funcDecl *ast.FuncDecl) bool {
+func isContextHelperFuncOutsideContextFile(funcDecl *ast.FuncDecl, contextImports map[string]struct{}) bool {
 	if funcDecl.Recv != nil {
 		return false
 	}
 	name := funcDecl.Name.Name
 	return strings.HasPrefix(name, "ContextWith") ||
 		strings.HasPrefix(name, "contextWith") ||
-		(strings.HasSuffix(name, "FromContext") && hasSingleContextParam(funcDecl)) ||
-		(strings.HasSuffix(name, "ContextFrom") && hasContextParam(funcDecl)) ||
-		(strings.HasSuffix(name, "Context") && hasSingleContextParam(funcDecl)) ||
-		(strings.HasSuffix(name, "Context") && ast.IsExported(name) && hasContextParam(funcDecl))
+		(strings.HasSuffix(name, "FromContext") && hasSingleContextParam(funcDecl, contextImports)) ||
+		(strings.HasSuffix(name, "ContextFrom") && hasContextParam(funcDecl, contextImports)) ||
+		(strings.HasSuffix(name, "Context") && hasSingleContextParam(funcDecl, contextImports)) ||
+		(strings.HasSuffix(name, "Context") && ast.IsExported(name) && hasContextParam(funcDecl, contextImports))
 }
 
-func hasSingleContextParam(funcDecl *ast.FuncDecl) bool {
+func hasSingleContextParam(funcDecl *ast.FuncDecl, contextImports map[string]struct{}) bool {
 	return funcDecl.Type.Params != nil &&
 		len(funcDecl.Type.Params.List) == 1 &&
-		isContextExpr(funcDecl.Type.Params.List[0].Type)
+		isContextExpr(funcDecl.Type.Params.List[0].Type, contextImports)
 }
 
-func hasContextParam(funcDecl *ast.FuncDecl) bool {
+func hasContextParam(funcDecl *ast.FuncDecl, contextImports map[string]struct{}) bool {
 	if funcDecl.Type.Params == nil || len(funcDecl.Type.Params.List) == 0 {
 		return false
 	}
-	return isContextExpr(funcDecl.Type.Params.List[0].Type)
+	return isContextExpr(funcDecl.Type.Params.List[0].Type, contextImports)
 }
 
-func isContextExpr(expr ast.Expr) bool {
+func isContextExpr(expr ast.Expr, contextImports map[string]struct{}) bool {
 	selector, ok := expr.(*ast.SelectorExpr)
 	if !ok || selector.Sel.Name != "Context" {
 		return false
 	}
 	ident, ok := selector.X.(*ast.Ident)
-	return ok && ident.Name == "context"
+	return ok && isContextImportName(ident.Name, contextImports)
 }

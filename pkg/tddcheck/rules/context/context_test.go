@@ -36,6 +36,21 @@ func requestContext(ctx context.Context) context.Context {
 
 func (ctx wrappedContext) Deadline() {}
 `)
+	testkit.WriteFile(t, root, "good/alias/context.go", `package alias
+
+import stdctx "context"
+
+type key struct{}
+
+func ContextWithUser(ctx stdctx.Context, user string) stdctx.Context {
+	return stdctx.WithValue(ctx, key{}, user)
+}
+
+func UserFromContext(ctx stdctx.Context) (string, bool) {
+	user, ok := ctx.Value(key{}).(string)
+	return user, ok
+}
+`)
 	testkit.WriteFile(t, root, "bad/context.go", `package bad
 
 func unrelated() {}
@@ -73,6 +88,21 @@ func nodeAccessDecisionFromContext(ctx context.Context, node string) bool {
 	return node != ""
 }
 `)
+	testkit.WriteFile(t, root, "bad/alias/service.go", `package alias
+
+import stdctx "context"
+
+type key struct{}
+
+func UserFromContext(ctx stdctx.Context) (string, bool) {
+	user, ok := ctx.Value(key{}).(string)
+	return user, ok
+}
+
+func setValue(ctx stdctx.Context, user string) stdctx.Context {
+	return stdctx.WithValue(ctx, key{}, user)
+}
+`)
 	testkit.WriteFile(t, root, "bad/service_test.go", `package bad
 
 import "context"
@@ -96,6 +126,8 @@ func ContextWithTest(ctx context.Context, user string) context.Context {
 		"context helper ContextWithUser must be declared in context.go",
 		"context helper UserFromContext must be declared in context.go",
 		"context helper requestContext must be declared in context.go",
+		"context.WithValue must be used in context.go",
+		"context helper UserFromContext must be declared in context.go",
 		"context.WithValue must be used in context.go",
 	}
 	if !reflect.DeepEqual(got, want) {

@@ -65,7 +65,7 @@ func (r Rules) LayerDependencyViolations() ([]LayerDependencyViolation, error) {
 	if err != nil {
 		return nil, err
 	}
-	internalPrefix := modulePath + "/internal/"
+	importPrefixes := moduleImportPrefixes(modulePath, root)
 
 	files, err := rulekit.ModuleFiles(r.root, "Rules", config, func(name string) bool {
 		return strings.HasSuffix(name, ".go")
@@ -76,7 +76,7 @@ func (r Rules) LayerDependencyViolations() ([]LayerDependencyViolation, error) {
 
 	var violations []LayerDependencyViolation
 	for _, file := range files {
-		fileViolations, err := layerDependencyViolationsInFile(root, internalPrefix, config, file)
+		fileViolations, err := layerDependencyViolationsInFile(root, importPrefixes, config, file)
 		if err != nil {
 			return nil, err
 		}
@@ -85,17 +85,14 @@ func (r Rules) LayerDependencyViolations() ([]LayerDependencyViolation, error) {
 	return violations, nil
 }
 
-func layerDependencyViolationsInFile(root string, internalPrefix string, config rulekit.Config, filename string) ([]LayerDependencyViolation, error) {
+func layerDependencyViolationsInFile(root string, importPrefixes []string, config rulekit.Config, filename string) ([]LayerDependencyViolation, error) {
 	rel, err := filepath.Rel(root, filename)
 	if err != nil {
 		return nil, err
 	}
 	parts := strings.Split(filepath.ToSlash(rel), "/")
-	if len(parts) == 0 {
-		return nil, nil
-	}
-	sourceLayer := parts[0]
-	if !slices.Contains(config.LayerDirs, sourceLayer) {
+	sourceLayer, ok := sourceLayerFromRel(config, parts)
+	if !ok {
 		return nil, nil
 	}
 
@@ -108,7 +105,7 @@ func layerDependencyViolationsInFile(root string, internalPrefix string, config 
 	var violations []LayerDependencyViolation
 	for _, importSpec := range parsedFile.Imports {
 		importPath := strings.Trim(importSpec.Path.Value, `"`)
-		targetLayer, targetRel, ok := internalImportLayer(internalPrefix, importPath)
+		targetLayer, targetRel, ok := moduleImportLayer(importPrefixes, importPath)
 		if !ok {
 			continue
 		}
@@ -125,16 +122,50 @@ func layerDependencyViolationsInFile(root string, internalPrefix string, config 
 	return violations, nil
 }
 
-func internalImportLayer(internalPrefix string, importPath string) (string, string, bool) {
-	if !strings.HasPrefix(importPath, internalPrefix) {
-		return "", "", false
+func sourceLayerFromRel(config rulekit.Config, parts []string) (string, bool) {
+	for _, part := range parts {
+		if slices.Contains(config.LayerDirs, part) {
+			return part, true
+		}
 	}
-	rel := strings.TrimPrefix(importPath, internalPrefix)
-	layer, _, ok := strings.Cut(rel, "/")
-	if !ok {
-		return "", "", false
+	return "", false
+}
+
+func moduleImportPrefixes(modulePath string, root string) []string {
+	prefixes := []string{modulePath + "/internal/"}
+	projectRoot, err := rulekit.FindProjectRoot()
+	if err != nil {
+		return prefixes
 	}
-	return layer, rel, true
+	rel, err := filepath.Rel(projectRoot, root)
+	if err != nil || strings.HasPrefix(rel, "..") {
+		return prefixes
+	}
+	var prefix string
+	if rel == "." {
+		prefix = modulePath + "/"
+	} else {
+		prefix = modulePath + "/" + filepath.ToSlash(rel) + "/"
+	}
+	if !slices.Contains(prefixes, prefix) {
+		prefixes = append(prefixes, prefix)
+	}
+	return prefixes
+}
+
+func moduleImportLayer(importPrefixes []string, importPath string) (string, string, bool) {
+	for _, prefix := range importPrefixes {
+		if !strings.HasPrefix(importPath, prefix) {
+			continue
+		}
+		rel := strings.TrimPrefix(importPath, prefix)
+		layer, _, ok := strings.Cut(rel, "/")
+		if !ok {
+			return "", "", false
+		}
+		return layer, rel, true
+	}
+	return "", "", false
 }
 
 func invalidLayerDependency(config rulekit.Config, sourceLayer string, targetLayer string, targetRel string) (string, bool) {
