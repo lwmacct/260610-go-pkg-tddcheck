@@ -6,23 +6,22 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/lwmacct/260610-go-pkg-tddcheck)](https://goreportcard.com/report/github.com/lwmacct/260610-go-pkg-tddcheck)
 [![GitHub Tag](https://img.shields.io/github/v/tag/lwmacct/260610-go-pkg-tddcheck?sort=semver)](https://github.com/lwmacct/260610-go-pkg-tddcheck/tags)
 
-`tddcheck` is a Go AST based unit-test helper for enforcing observable TDD
-conventions.
+`tddcheck` 是一个基于 Go AST 的单元测试辅助工具，用于强制执行可观察的
+TDD 约定。
 
-It cannot prove that a test was written before implementation code. It enforces
-rules that make that workflow visible: public APIs need candidate tests, test
-functions must not be empty, and optional changed-code checks can be used from
-pre-commit.
+它无法证明测试是在实现代码之前编写的。它会执行一些规则，让这种工作流变得
+可见：公共 API 需要候选测试，测试函数不能为空，并且可以在 pre-commit 中
+使用可选的变更代码检查。
 
-## Install
+## 安装
 
 ```bash
 go get github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck
 ```
 
-## Unit Test Usage
+## 单元测试用法
 
-Create a normal Go test in the project that owns the policy:
+在负责该策略的项目中创建一个普通的 Go 测试：
 
 ```go
 package project_test
@@ -38,7 +37,7 @@ func TestTDDPolicy(t *testing.T) {
 }
 ```
 
-For explicit policy configuration:
+如需显式配置策略：
 
 ```go
 var policy = tddcheck.Policy{
@@ -53,24 +52,23 @@ func TestTDDPolicy(t *testing.T) {
 }
 ```
 
-The root directory is auto-detected by walking up from the calling test file to
-the nearest `go.mod`. Use `WithRoot` or `Policy.Root` when a test lives outside
-the module it checks.
+根目录会从调用测试文件开始向上查找最近的 `go.mod` 来自动检测。当测试位于
+它所检查的模块之外时，请使用 `WithRoot` 或 `Policy.Root`。
 
-## Rules
+## 规则
 
-Default unit-test rules:
+默认单元测试规则：
 
-- `PublicAPIsHaveTests`: exported production functions and methods on exported
-  receiver types require candidate tests.
-- `TestsAreNotEmpty`: test functions must not be empty.
+- `PublicAPIsHaveTests`：导出的生产函数，以及导出接收者类型上的方法，
+  都需要候选测试。
+- `TestsAreNotEmpty`：测试函数不能为空。
 
-Changed-code rule:
+变更代码规则：
 
-- `ChangedCodeHasTests`: staged production Go changes require a staged test file
-  in the same package directory.
+- `ChangedCodeHasTests`：已暂存的生产 Go 代码变更，需要在同一包目录下有
+  已暂存的测试文件。
 
-Enable changed-code checks explicitly:
+显式启用变更代码检查：
 
 ```go
 func TestChangedCodeHasTests(t *testing.T) {
@@ -80,7 +78,7 @@ func TestChangedCodeHasTests(t *testing.T) {
 
 ## pre-commit
 
-The preferred hook runs the policy as a normal unit test:
+推荐的钩子会将该策略作为普通单元测试运行：
 
 ```yaml
 repos:
@@ -94,8 +92,7 @@ repos:
         types: [go]
 ```
 
-The repository also publishes a thin CLI hook for projects that do not want to
-add a policy test:
+对于不想添加策略测试的项目，本仓库也发布了一个轻量 CLI 钩子：
 
 ```yaml
 repos:
@@ -113,6 +110,6 @@ tddcheck --root .
 tddcheck --staged
 ```
 
-## License
+## 许可证
 
 MIT
