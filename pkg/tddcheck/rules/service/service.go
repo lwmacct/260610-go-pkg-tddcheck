@@ -31,8 +31,8 @@ type ServiceBoundaryViolation struct {
 	Message string
 }
 
-// AssertServiceBoundaries fails the test when module service boundaries are violated.
-func (r Rules) AssertServiceBoundaries(t *testing.T) {
+// Assert fails the test when module service boundaries are violated.
+func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.ServiceBoundaryViolations()

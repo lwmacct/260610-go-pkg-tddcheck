@@ -28,7 +28,7 @@ type DatabaseTestViolation struct {
 	Message string
 }
 
-func (r Rules) AssertDatabaseTestBoundary(t *testing.T) {
+func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.DatabaseTestBoundaryViolations()

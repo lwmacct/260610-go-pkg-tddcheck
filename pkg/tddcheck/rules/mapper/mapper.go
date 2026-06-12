@@ -31,8 +31,8 @@ type MapperBoundaryViolation struct {
 	Message string
 }
 
-// AssertMapperBoundary fails the test when module mapper boundaries are violated.
-func (r Rules) AssertMapperBoundary(t *testing.T) {
+// Assert fails the test when module mapper boundaries are violated.
+func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.MapperBoundaryViolations()

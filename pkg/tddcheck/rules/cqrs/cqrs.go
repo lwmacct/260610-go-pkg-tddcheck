@@ -37,21 +37,24 @@ type CQRSInterfaceNameViolation struct {
 	Message string
 }
 
-// AssertStructSuffix fails the test when a struct in layered module cqrs.go
-// does not end with Query, Result, or Command.
-func (r Rules) AssertStructSuffix(t *testing.T) {
+// Assert fails the test when any CQRS naming rule is violated.
+func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
-	violations, err := r.StructSuffixViolations()
+	structs, err := r.StructSuffixViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(violations) == 0 {
+	interfaces, err := r.InterfaceNameViolations()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(structs) == 0 && len(interfaces) == 0 {
 		return
 	}
 
-	lines := make([]string, 0, len(violations))
-	for _, violation := range violations {
+	lines := make([]string, 0, len(structs)+len(interfaces))
+	for _, violation := range structs {
 		lines = append(lines, fmt.Sprintf(
 			"%s:%d: struct %s must end with Query, Result, or Command",
 			violation.File,
@@ -59,25 +62,7 @@ func (r Rules) AssertStructSuffix(t *testing.T) {
 			violation.Name,
 		))
 	}
-
-	t.Fatalf("invalid CQRS struct names:\n  - %s", strings.Join(lines, "\n  - "))
-}
-
-// AssertInterfaceNames fails the test when an interface in layered module
-// cqrs.go does not express a use case contract or command/query dependency.
-func (r Rules) AssertInterfaceNames(t *testing.T) {
-	t.Helper()
-
-	violations, err := r.InterfaceNameViolations()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(violations) == 0 {
-		return
-	}
-
-	lines := make([]string, 0, len(violations))
-	for _, violation := range violations {
+	for _, violation := range interfaces {
 		lines = append(lines, fmt.Sprintf(
 			"%s:%d: interface %s %s",
 			violation.File,
@@ -87,7 +72,7 @@ func (r Rules) AssertInterfaceNames(t *testing.T) {
 		))
 	}
 
-	t.Fatalf("invalid CQRS interface names:\n  - %s", strings.Join(lines, "\n  - "))
+	t.Fatalf("invalid CQRS boundaries:\n  - %s", strings.Join(lines, "\n  - "))
 }
 
 // StructSuffixViolations returns all struct names in module cqrs.go files that

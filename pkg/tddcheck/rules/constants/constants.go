@@ -31,8 +31,8 @@ type ConstantsBoundaryViolation struct {
 	Message string
 }
 
-// AssertConstantsBoundaries fails the test when module constants boundaries are violated.
-func (r Rules) AssertConstantsBoundaries(t *testing.T) {
+// Assert fails the test when module constants boundaries are violated.
+func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.ConstantsBoundaryViolations()

@@ -31,8 +31,8 @@ type SchemaBoundaryViolation struct {
 	Message string
 }
 
-// AssertSchemaBoundaries fails the test when module schema boundaries are violated.
-func (r Rules) AssertSchemaBoundaries(t *testing.T) {
+// Assert fails the test when module schema boundaries are violated.
+func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.SchemaBoundaryViolations()

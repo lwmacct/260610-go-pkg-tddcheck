@@ -30,7 +30,7 @@ type LayerDependencyViolation struct {
 	Message    string
 }
 
-func (r Rules) AssertLayerDependencies(t *testing.T) {
+func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.LayerDependencyViolations()

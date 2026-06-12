@@ -31,8 +31,8 @@ type ContextBoundaryViolation struct {
 	Message string
 }
 
-// AssertContextBoundaries fails the test when module context boundaries are violated.
-func (r Rules) AssertContextBoundaries(t *testing.T) {
+// Assert fails the test when module context boundaries are violated.
+func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.ContextBoundaryViolations()

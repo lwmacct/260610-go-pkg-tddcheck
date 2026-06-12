@@ -31,8 +31,8 @@ type EntityBoundaryViolation struct {
 	Message string
 }
 
-// AssertEntityBoundaries fails the test when module entity boundaries are violated.
-func (r Rules) AssertEntityBoundaries(t *testing.T) {
+// Assert fails the test when module entity boundaries are violated.
+func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.EntityBoundaryViolations()

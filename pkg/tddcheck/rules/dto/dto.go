@@ -44,21 +44,28 @@ type DTOFileViolation struct {
 	Name string
 }
 
-// AssertStructSuffix fails the test when a struct in layered module dto.go
-// does not end with DTO or DTOs.
-func (r Rules) AssertStructSuffix(t *testing.T) {
+// Assert fails the test when any DTO naming or file ownership rule is violated.
+func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
-	violations, err := r.StructSuffixViolations()
+	structs, err := r.StructSuffixViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(violations) == 0 {
+	funcs, err := r.FuncViolations()
+	if err != nil {
+		t.Fatal(err)
+	}
+	owned, err := r.FileOwnershipViolations()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(structs) == 0 && len(funcs) == 0 && len(owned) == 0 {
 		return
 	}
 
-	lines := make([]string, 0, len(violations))
-	for _, violation := range violations {
+	lines := make([]string, 0, len(structs)+len(funcs)+len(owned))
+	for _, violation := range structs {
 		lines = append(lines, fmt.Sprintf(
 			"%s:%d: struct %s must end with DTO or DTOs",
 			violation.File,
@@ -66,24 +73,7 @@ func (r Rules) AssertStructSuffix(t *testing.T) {
 			violation.Name,
 		))
 	}
-
-	t.Fatalf("invalid DTO struct names:\n  - %s", strings.Join(lines, "\n  - "))
-}
-
-// AssertNoFuncs fails the test when layered module dto.go files declare functions.
-func (r Rules) AssertNoFuncs(t *testing.T) {
-	t.Helper()
-
-	violations, err := r.FuncViolations()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(violations) == 0 {
-		return
-	}
-
-	lines := make([]string, 0, len(violations))
-	for _, violation := range violations {
+	for _, violation := range funcs {
 		lines = append(lines, fmt.Sprintf(
 			"%s:%d: dto.go must not declare func %s",
 			violation.File,
@@ -91,24 +81,7 @@ func (r Rules) AssertNoFuncs(t *testing.T) {
 			violation.Name,
 		))
 	}
-
-	t.Fatalf("invalid DTO function declarations:\n  - %s", strings.Join(lines, "\n  - "))
-}
-
-// AssertDTOFileOwnership fails the test when DTO structs are declared outside dto.go.
-func (r Rules) AssertDTOFileOwnership(t *testing.T) {
-	t.Helper()
-
-	violations, err := r.FileOwnershipViolations()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(violations) == 0 {
-		return
-	}
-
-	lines := make([]string, 0, len(violations))
-	for _, violation := range violations {
+	for _, violation := range owned {
 		lines = append(lines, fmt.Sprintf(
 			"%s:%d: DTO struct %s must be declared in dto.go",
 			violation.File,
@@ -117,7 +90,7 @@ func (r Rules) AssertDTOFileOwnership(t *testing.T) {
 		))
 	}
 
-	t.Fatalf("invalid DTO file ownership:\n  - %s", strings.Join(lines, "\n  - "))
+	t.Fatalf("invalid DTO boundaries:\n  - %s", strings.Join(lines, "\n  - "))
 }
 
 // StructSuffixViolations returns all struct names in module dto.go files that do

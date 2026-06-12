@@ -31,8 +31,8 @@ type PublicAPINameViolation struct {
 	Message string
 }
 
-// AssertPublicAPINames fails the test when public API names use reserved responsibility prefixes.
-func (r Rules) AssertPublicAPINames(t *testing.T) {
+// Assert fails the test when public API names use reserved responsibility prefixes.
+func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.PublicAPINameViolations()

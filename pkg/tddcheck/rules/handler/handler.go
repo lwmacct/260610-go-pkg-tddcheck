@@ -31,8 +31,8 @@ type HandlerBoundaryViolation struct {
 	Message string
 }
 
-// AssertHandlerBoundary fails the test when module handler boundaries are violated.
-func (r Rules) AssertHandlerBoundary(t *testing.T) {
+// Assert fails the test when module handler boundaries are violated.
+func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.HandlerBoundaryViolations()

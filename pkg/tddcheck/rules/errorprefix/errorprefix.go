@@ -30,9 +30,9 @@ type ErrorPrefixViolation struct {
 	Name string
 }
 
-// AssertErrorPrefix fails the test when a package-level error variable in
+// Assert fails the test when a package-level error variable in
 // layered module errors.go does not start with Err.
-func (r Rules) AssertErrorPrefix(t *testing.T) {
+func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.ErrorPrefixViolations()

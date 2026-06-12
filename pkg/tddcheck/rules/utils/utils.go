@@ -31,8 +31,8 @@ type UtilsBoundaryViolation struct {
 	Message string
 }
 
-// AssertUtilsBoundaries fails the test when module utils boundaries are violated.
-func (r Rules) AssertUtilsBoundaries(t *testing.T) {
+// Assert fails the test when module utils boundaries are violated.
+func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.UtilsBoundaryViolations()

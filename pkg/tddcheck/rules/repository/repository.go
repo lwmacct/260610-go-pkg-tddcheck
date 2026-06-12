@@ -32,8 +32,8 @@ type RepositoryBoundaryViolation struct {
 	Message string
 }
 
-// AssertRepositoryBoundary fails the test when module repository boundaries are violated.
-func (r Rules) AssertRepositoryBoundary(t *testing.T) {
+// Assert fails the test when module repository boundaries are violated.
+func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.RepositoryBoundaryViolations()

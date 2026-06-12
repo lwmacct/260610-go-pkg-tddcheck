@@ -30,8 +30,8 @@ type PackageNameViolation struct {
 	Message string
 }
 
-// AssertPackageNames fails the test when package names do not match directory names.
-func (r Rules) AssertPackageNames(t *testing.T) {
+// Assert fails the test when package names do not match directory names.
+func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.PackageNameViolations()
