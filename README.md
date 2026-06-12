@@ -6,22 +6,22 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/lwmacct/260610-go-pkg-tddcheck)](https://goreportcard.com/report/github.com/lwmacct/260610-go-pkg-tddcheck)
 [![GitHub Tag](https://img.shields.io/github/v/tag/lwmacct/260610-go-pkg-tddcheck?sort=semver)](https://github.com/lwmacct/260610-go-pkg-tddcheck/tags)
 
-`tddcheck` 是一个基于 Go AST 的单元测试辅助工具，用于强制执行可观察的
-TDD 约定。
+`tddcheck` is a Go test helper package for enforcing mechanical architecture
+boundaries in layered Go projects. It checks file ownership, naming conventions,
+and import direction with the standard Go parser.
 
-它无法证明测试是在实现代码之前编写的。它会执行一些规则，让这种工作流变得
-可见：公共 API 需要候选测试，测试函数不能为空，并且可以在 pre-commit 中
-使用可选的变更代码检查。
+This version is intentionally not compatible with the old public API test
+checker. The package is now focused on project architecture rules.
 
-## 安装
+## Install
 
 ```bash
 go get github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck
 ```
 
-## 单元测试用法
+## Go Test Usage
 
-在负责该策略的项目中创建一个普通的 Go 测试：
+Create a normal Go test in the project that owns the architecture policy:
 
 ```go
 package project_test
@@ -32,53 +32,72 @@ import (
     "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck"
 )
 
-func TestTDDPolicy(t *testing.T) {
-    tddcheck.Assert(t)
+func TestArchitecture(t *testing.T) {
+    tddcheck.ProjectRules{Root: "internal"}.Assert(t)
 }
 ```
 
-如需显式配置策略：
+`Root` may be absolute or relative to the nearest `go.mod`. If omitted, the
+default root is `internal`.
+
+For fine-grained checks, use the individual rule types:
 
 ```go
-var policy = tddcheck.Policy{
-    Ignore: []string{
-        "gen/**",
-        "mocks/**",
-    },
+func TestLayerDependencies(t *testing.T) {
+    tddcheck.ModuleLayerRules{Root: "internal"}.AssertLayerDependencies(t)
 }
 
-func TestTDDPolicy(t *testing.T) {
-    policy.Assert(t)
+func TestServiceBoundaries(t *testing.T) {
+    tddcheck.ModuleServiceRules{Root: "internal"}.AssertServiceBoundaries(t)
 }
 ```
 
-根目录会从调用测试文件开始向上查找最近的 `go.mod` 来自动检测。当测试位于
-它所检查的模块之外时，请使用 `WithRoot` 或 `Policy.Root`。
+## Default Project Rules
 
-## 规则
+`ProjectRules` runs these checks:
 
-默认单元测试规则：
+- `layer`: `domain`, `usecase`, `adapter`, `runtime`, and `infra` imports obey dependency direction.
+- `package-name`: package names match their directory names.
+- `constants`: package constants live in `constants.go`.
+- `entity`: concrete entity and value object types live in `entity.go`.
+- `errors` and `error-prefix`: package errors live in `errors.go` and use `Err*` names.
+- `context`: context helpers and `context.WithValue` usage live in `context.go`.
+- `cqrs`: CQRS structs and interfaces use explicit suffixes.
+- `dto`: DTO structs live in `dto.go`, use `DTO` or `DTOs`, and `dto.go` has no functions.
+- `mapper`: mapper functions are pure `To*` conversions in `mapper.go`.
+- `public-api`: exported APIs avoid internal responsibility prefixes such as `Validate*` and `Normalize*`.
+- `service`: `Service`, `NewService`, and `Service` methods stay in service files.
+- `validation`: validation helpers live in `validation.go` and use private `validate*` or `normalize*` names.
+- `handler`: protocol handlers do not carry persistence responsibilities.
+- `repository`: repositories do not carry protocol or DTO mapping responsibilities.
+- `schema`: schema files are reserved for storage schema definitions.
+- `utils`: private `util*` helpers live in `utils.go`.
 
-- `PublicAPIsHaveTests`：导出的生产函数，以及导出接收者类型上的方法，
-  都需要候选测试。
-- `TestsAreNotEmpty`：测试函数不能为空。
-
-变更代码规则：
-
-- `ChangedCodeHasTests`：已暂存的生产 Go 代码变更，需要在同一包目录下有
-  已暂存的测试文件。
-
-显式启用变更代码检查：
+Database test boundary checks are opt-in:
 
 ```go
-func TestChangedCodeHasTests(t *testing.T) {
-    tddcheck.Assert(t, tddcheck.WithChanged(true))
+func TestArchitecture(t *testing.T) {
+    tddcheck.ProjectRules{
+        Root:                 ".",
+        IncludeDatabaseTests: true,
+    }.Assert(t)
 }
 ```
 
-## pre-commit
+## CLI
 
-推荐的钩子会将该策略作为普通单元测试运行：
+```bash
+go install github.com/lwmacct/260610-go-pkg-tddcheck/cmd/tddcheck@latest
+tddcheck --root internal
+tddcheck --root . --database-tests
+```
+
+The command exits with code `1` when violations are found and `2` for execution
+errors.
+
+## CI and pre-commit
+
+Prefer running the policy as a normal test:
 
 ```yaml
 repos:
@@ -86,30 +105,27 @@ repos:
     hooks:
       - id: tddcheck
         name: tddcheck
-        entry: go test ./... -run TestTDDPolicy
+        entry: go test ./... -run TestArchitecture
         language: system
         pass_filenames: false
         types: [go]
 ```
 
-对于不想添加策略测试的项目，本仓库也发布了一个轻量 CLI 钩子：
+The CLI is useful when you do not want to add a policy test to the target
+project:
 
 ```yaml
 repos:
-  - repo: https://github.com/lwmacct/260610-go-pkg-tddcheck
-    rev: v0.1.0
+  - repo: local
     hooks:
       - id: tddcheck
+        name: tddcheck
+        entry: tddcheck --root internal
+        language: system
+        pass_filenames: false
+        types: [go]
 ```
 
-## CLI
-
-```bash
-go install github.com/lwmacct/260610-go-pkg-tddcheck/cmd/tddcheck@latest
-tddcheck --root .
-tddcheck --staged
-```
-
-## 许可证
+## License
 
 MIT

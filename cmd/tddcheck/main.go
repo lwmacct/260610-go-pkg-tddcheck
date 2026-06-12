@@ -16,18 +16,21 @@ func main() {
 
 func run() int {
 	var (
-		root        string
-		stagedOnly  bool
-		showVersion bool
+		root                 string
+		includeDatabaseTests bool
+		showVersion          bool
 	)
 
 	flags := flag.NewFlagSet("tddcheck", flag.ContinueOnError)
 	flags.SetOutput(os.Stderr)
-	flags.StringVar(&root, "root", ".", "project root")
-	flags.BoolVar(&stagedOnly, "staged", false, "check staged git changes")
+	flags.StringVar(&root, "root", "internal", "project root or module subtree to check")
+	flags.BoolVar(&includeDatabaseTests, "database-tests", false, "include database test boundary checks")
 	flags.BoolVar(&showVersion, "version", false, "print version")
 
 	if err := flags.Parse(os.Args[1:]); err != nil {
+		if err == flag.ErrHelp {
+			return 0
+		}
 		return 2
 	}
 	if showVersion {
@@ -35,10 +38,10 @@ func run() int {
 		return 0
 	}
 
-	result := tddcheck.Check(
-		tddcheck.WithRoot(root),
-		tddcheck.WithChanged(stagedOnly),
-	)
+	result := (tddcheck.ProjectRules{
+		Root:                 root,
+		IncludeDatabaseTests: includeDatabaseTests,
+	}).Check()
 	if result.Err != nil {
 		fmt.Fprintln(os.Stderr, "tddcheck:", result.Err)
 		return 2

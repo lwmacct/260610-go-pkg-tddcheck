@@ -1,14 +1,13 @@
-// Package tddcheck provides AST-based checks for enforcing test-driven
-// development conventions in Go projects.
+// Package tddcheck provides Go test helpers for enforcing project architecture
+// boundaries in layered Go modules.
 //
-// The package is designed to be used from ordinary unit tests. It cannot prove
-// that tests were written before implementation code, but it can enforce
-// observable rules: exported API should have candidate tests and committed
-// tests should not be empty.
+// The package is intentionally mechanical: it scans Go source files with the
+// standard parser and reports naming, file ownership, and dependency direction
+// violations. It is designed to run from ordinary tests and CI.
 //
 // Typical usage:
 //
-//	func TestTDDPolicy(t *testing.T) {
-//	    tddcheck.Assert(t)
+//	func TestArchitecture(t *testing.T) {
+//	    tddcheck.ProjectRules{Root: "internal"}.Assert(t)
 //	}
 package tddcheck
