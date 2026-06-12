@@ -14,7 +14,8 @@ import (
 // ModuleValidationRules declares mechanical boundary rules for module validation.go files.
 type ModuleValidationRules struct {
 	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root string
+	Root   string
+	Config Config
 }
 
 // ValidationBoundaryViolation describes one validation boundary violation.
@@ -51,7 +52,7 @@ func (r ModuleValidationRules) AssertValidationBoundaries(t *testing.T) {
 
 // ValidationBoundaryViolations returns all module validation boundary violations.
 func (r ModuleValidationRules) ValidationBoundaryViolations() ([]ValidationBoundaryViolation, error) {
-	moduleDirs, err := modulePackageDirs(r.Root, "ModuleValidationRules")
+	moduleDirs, err := modulePackageDirsWithConfig(r.Root, "ModuleValidationRules", r.Config)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +68,7 @@ func (r ModuleValidationRules) ValidationBoundaryViolations() ([]ValidationBound
 			if strings.HasSuffix(file, "_test.go") {
 				continue
 			}
-			fileViolations, err := validationBoundaryViolationsInFile(file)
+			fileViolations, err := validationBoundaryViolationsInFile(r.Config, file)
 			if err != nil {
 				return nil, err
 			}
@@ -78,7 +79,7 @@ func (r ModuleValidationRules) ValidationBoundaryViolations() ([]ValidationBound
 	return violations, nil
 }
 
-func validationBoundaryViolationsInFile(filename string) ([]ValidationBoundaryViolation, error) {
+func validationBoundaryViolationsInFile(config Config, filename string) ([]ValidationBoundaryViolation, error) {
 	fileSet := token.NewFileSet()
 	parsedFile, err := parser.ParseFile(fileSet, filename, nil, parser.SkipObjectResolution)
 	if err != nil {
@@ -86,12 +87,12 @@ func validationBoundaryViolationsInFile(filename string) ([]ValidationBoundaryVi
 	}
 
 	if filepath.Base(filename) == "validation.go" {
-		return validationFileBoundaryViolations(fileSet, filename, parsedFile), nil
+		return validationFileBoundaryViolations(fileSet, filename, config.withDefaults(), parsedFile), nil
 	}
 	return nonValidationFileBoundaryViolations(fileSet, filename, parsedFile), nil
 }
 
-func validationFileBoundaryViolations(fileSet *token.FileSet, filename string, parsedFile *ast.File) []ValidationBoundaryViolation {
+func validationFileBoundaryViolations(fileSet *token.FileSet, filename string, config Config, parsedFile *ast.File) []ValidationBoundaryViolation {
 	var violations []ValidationBoundaryViolation
 	for _, decl := range parsedFile.Decls {
 		switch typed := decl.(type) {
@@ -124,7 +125,7 @@ func validationFileBoundaryViolations(fileSet *token.FileSet, filename string, p
 			position := fileSet.Position(typed.Pos())
 			if typed.Recv != nil {
 				if typed.Name.Name == "Resolve" {
-					violations = append(violations, validationResolveMethodViolations(fileSet, filename, typed)...)
+					violations = append(violations, validationResolveMethodViolations(fileSet, filename, config, typed)...)
 					continue
 				}
 				violations = append(violations, ValidationBoundaryViolation{
@@ -146,19 +147,19 @@ func validationFileBoundaryViolations(fileSet *token.FileSet, filename string, p
 	return violations
 }
 
-func validationResolveMethodViolations(fileSet *token.FileSet, filename string, funcDecl *ast.FuncDecl) []ValidationBoundaryViolation {
-	if isValidationResolveSignature(funcDecl) {
+func validationResolveMethodViolations(fileSet *token.FileSet, filename string, config Config, funcDecl *ast.FuncDecl) []ValidationBoundaryViolation {
+	if isValidationResolveSignature(config, funcDecl) {
 		return nil
 	}
 	position := fileSet.Position(funcDecl.Pos())
 	return []ValidationBoundaryViolation{{
 		File:    displayFilename(filename),
 		Line:    position.Line,
-		Message: "validation.go Resolve receiver method must implement huma.Resolver or huma.ResolverWithPath",
+		Message: config.ValidationResolve.Message,
 	}}
 }
 
-func isValidationResolveSignature(funcDecl *ast.FuncDecl) bool {
+func isValidationResolveSignature(config Config, funcDecl *ast.FuncDecl) bool {
 	if funcDecl.Type.Params == nil || funcDecl.Type.Results == nil || len(funcDecl.Type.Results.List) != 1 {
 		return false
 	}
@@ -168,34 +169,30 @@ func isValidationResolveSignature(funcDecl *ast.FuncDecl) bool {
 	}
 	params := funcDecl.Type.Params.List
 	if len(params) == 1 {
-		return isHumaContextType(params[0].Type)
+		return isConfiguredSelectorType(params[0].Type, config.ValidationResolve.ContextPackage, config.ValidationResolve.ContextType)
 	}
 	if len(params) == 2 {
-		return isHumaContextType(params[0].Type) && isHumaPathBufferPointerType(params[1].Type)
+		return isConfiguredSelectorType(params[0].Type, config.ValidationResolve.ContextPackage, config.ValidationResolve.ContextType) &&
+			isConfiguredPointerSelectorType(params[1].Type, config.ValidationResolve.PathBufferPackage, config.ValidationResolve.PathBufferType)
 	}
 	return false
 }
 
-func isHumaContextType(expr ast.Expr) bool {
+func isConfiguredSelectorType(expr ast.Expr, pkgName string, typeName string) bool {
 	selector, ok := expr.(*ast.SelectorExpr)
-	if !ok || selector.Sel.Name != "Context" {
+	if !ok || selector.Sel.Name != typeName {
 		return false
 	}
 	ident, ok := selector.X.(*ast.Ident)
-	return ok && ident.Name == "huma"
+	return ok && ident.Name == pkgName
 }
 
-func isHumaPathBufferPointerType(expr ast.Expr) bool {
+func isConfiguredPointerSelectorType(expr ast.Expr, pkgName string, typeName string) bool {
 	star, ok := expr.(*ast.StarExpr)
 	if !ok {
 		return false
 	}
-	selector, ok := star.X.(*ast.SelectorExpr)
-	if !ok || selector.Sel.Name != "PathBuffer" {
-		return false
-	}
-	ident, ok := selector.X.(*ast.Ident)
-	return ok && ident.Name == "huma"
+	return isConfiguredSelectorType(star.X, pkgName, typeName)
 }
 
 func isBuiltinErrorType(expr ast.Expr) bool {

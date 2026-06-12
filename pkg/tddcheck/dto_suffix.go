@@ -14,7 +14,8 @@ import (
 // ModuleDTORules declares naming rules for module dto.go files.
 type ModuleDTORules struct {
 	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root string
+	Root   string
+	Config Config
 }
 
 // StructSuffixViolation describes one struct name that does not match DTO rules.
@@ -117,7 +118,7 @@ func (r ModuleDTORules) AssertDTOFileOwnership(t *testing.T) {
 // StructSuffixViolations returns all struct names in module dto.go files that do
 // not end with DTO or DTOs.
 func (r ModuleDTORules) StructSuffixViolations() ([]StructSuffixViolation, error) {
-	matches, err := moduleFiles(r.Root, "ModuleDTORules", func(name string) bool { return name == "dto.go" })
+	matches, err := moduleFilesWithConfig(r.Root, "ModuleDTORules", r.Config, func(name string) bool { return name == "dto.go" })
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +137,7 @@ func (r ModuleDTORules) StructSuffixViolations() ([]StructSuffixViolation, error
 
 // FuncViolations returns all functions declared in module dto.go files.
 func (r ModuleDTORules) FuncViolations() ([]DTOFuncViolation, error) {
-	matches, err := moduleFiles(r.Root, "ModuleDTORules", func(name string) bool { return name == "dto.go" })
+	matches, err := moduleFilesWithConfig(r.Root, "ModuleDTORules", r.Config, func(name string) bool { return name == "dto.go" })
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +156,7 @@ func (r ModuleDTORules) FuncViolations() ([]DTOFuncViolation, error) {
 
 // FileOwnershipViolations returns all DTO structs declared outside dto.go.
 func (r ModuleDTORules) FileOwnershipViolations() ([]DTOFileViolation, error) {
-	matches, err := moduleFiles(r.Root, "ModuleDTORules", func(name string) bool {
+	matches, err := moduleFilesWithConfig(r.Root, "ModuleDTORules", r.Config, func(name string) bool {
 		return strings.HasSuffix(name, ".go") && !strings.HasSuffix(name, "_test.go")
 	})
 	if err != nil {

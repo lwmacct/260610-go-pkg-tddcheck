@@ -13,7 +13,8 @@ import (
 // ModulePackageNameRules declares mechanical package naming rules.
 type ModulePackageNameRules struct {
 	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root string
+	Root   string
+	Config Config
 }
 
 // PackageNameViolation describes one package clause that does not match its directory.
@@ -50,7 +51,7 @@ func (r ModulePackageNameRules) AssertPackageNames(t *testing.T) {
 
 // PackageNameViolations returns all package name violations.
 func (r ModulePackageNameRules) PackageNameViolations() ([]PackageNameViolation, error) {
-	moduleDirs, err := modulePackageDirs(r.Root, "ModulePackageNameRules")
+	moduleDirs, err := modulePackageDirsWithConfig(r.Root, "ModulePackageNameRules", r.Config)
 	if err != nil {
 		return nil, err
 	}

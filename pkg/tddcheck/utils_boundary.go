@@ -14,7 +14,8 @@ import (
 // ModuleUtilsRules declares mechanical boundary rules for module utils.go files.
 type ModuleUtilsRules struct {
 	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root string
+	Root   string
+	Config Config
 }
 
 // UtilsBoundaryViolation describes one utils.go boundary violation.
@@ -51,7 +52,7 @@ func (r ModuleUtilsRules) AssertUtilsBoundaries(t *testing.T) {
 
 // UtilsBoundaryViolations returns all module utils boundary violations.
 func (r ModuleUtilsRules) UtilsBoundaryViolations() ([]UtilsBoundaryViolation, error) {
-	moduleDirs, err := modulePackageDirs(r.Root, "ModuleUtilsRules")
+	moduleDirs, err := modulePackageDirsWithConfig(r.Root, "ModuleUtilsRules", r.Config)
 	if err != nil {
 		return nil, err
 	}

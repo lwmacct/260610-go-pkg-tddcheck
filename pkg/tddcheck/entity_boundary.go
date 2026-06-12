@@ -14,7 +14,8 @@ import (
 // ModuleEntityRules declares mechanical boundary rules for module entity.go files.
 type ModuleEntityRules struct {
 	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root string
+	Root   string
+	Config Config
 }
 
 // EntityBoundaryViolation describes one entity boundary violation.
@@ -51,7 +52,7 @@ func (r ModuleEntityRules) AssertEntityBoundaries(t *testing.T) {
 
 // EntityBoundaryViolations returns all module entity boundary violations.
 func (r ModuleEntityRules) EntityBoundaryViolations() ([]EntityBoundaryViolation, error) {
-	moduleDirs, err := modulePackageDirs(r.Root, "ModuleEntityRules")
+	moduleDirs, err := modulePackageDirsWithConfig(r.Root, "ModuleEntityRules", r.Config)
 	if err != nil {
 		return nil, err
 	}

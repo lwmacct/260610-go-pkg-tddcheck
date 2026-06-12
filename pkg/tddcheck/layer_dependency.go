@@ -15,7 +15,8 @@ import (
 // ModuleLayerRules declares import direction rules for layered internal packages.
 type ModuleLayerRules struct {
 	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root string
+	Root   string
+	Config Config
 }
 
 type LayerDependencyViolation struct {
@@ -50,6 +51,7 @@ func (r ModuleLayerRules) AssertLayerDependencies(t *testing.T) {
 }
 
 func (r ModuleLayerRules) LayerDependencyViolations() ([]LayerDependencyViolation, error) {
+	config := r.Config.withDefaults()
 	root, err := resolveRuleRoot(r.Root, "ModuleLayerRules")
 	if err != nil {
 		return nil, err
@@ -60,7 +62,7 @@ func (r ModuleLayerRules) LayerDependencyViolations() ([]LayerDependencyViolatio
 	}
 	internalPrefix := modulePath + "/internal/"
 
-	files, err := moduleFiles(r.Root, "ModuleLayerRules", func(name string) bool {
+	files, err := moduleFilesWithConfig(r.Root, "ModuleLayerRules", config, func(name string) bool {
 		return strings.HasSuffix(name, ".go")
 	})
 	if err != nil {
@@ -69,7 +71,7 @@ func (r ModuleLayerRules) LayerDependencyViolations() ([]LayerDependencyViolatio
 
 	var violations []LayerDependencyViolation
 	for _, file := range files {
-		fileViolations, err := layerDependencyViolationsInFile(root, internalPrefix, file)
+		fileViolations, err := layerDependencyViolationsInFile(root, internalPrefix, config, file)
 		if err != nil {
 			return nil, err
 		}
@@ -78,7 +80,7 @@ func (r ModuleLayerRules) LayerDependencyViolations() ([]LayerDependencyViolatio
 	return violations, nil
 }
 
-func layerDependencyViolationsInFile(root string, internalPrefix string, filename string) ([]LayerDependencyViolation, error) {
+func layerDependencyViolationsInFile(root string, internalPrefix string, config Config, filename string) ([]LayerDependencyViolation, error) {
 	rel, err := filepath.Rel(root, filename)
 	if err != nil {
 		return nil, err
@@ -88,7 +90,7 @@ func layerDependencyViolationsInFile(root string, internalPrefix string, filenam
 		return nil, nil
 	}
 	sourceLayer := parts[0]
-	if !slices.Contains(moduleLayerDirs, sourceLayer) {
+	if !slices.Contains(config.LayerDirs, sourceLayer) {
 		return nil, nil
 	}
 
@@ -105,7 +107,7 @@ func layerDependencyViolationsInFile(root string, internalPrefix string, filenam
 		if !ok {
 			continue
 		}
-		if message, invalid := invalidLayerDependency(sourceLayer, targetLayer, targetRel); invalid {
+		if message, invalid := invalidLayerDependency(config, sourceLayer, targetLayer, targetRel); invalid {
 			position := fileSet.Position(importSpec.Pos())
 			violations = append(violations, LayerDependencyViolation{
 				File:       displayFilename(filename),
@@ -130,24 +132,19 @@ func internalImportLayer(internalPrefix string, importPath string) (string, stri
 	return layer, rel, true
 }
 
-func invalidLayerDependency(sourceLayer string, targetLayer string, targetRel string) (string, bool) {
-	switch sourceLayer {
-	case "domain":
-		if targetLayer == "adapter" {
-			return "domain must not import adapter", true
+func invalidLayerDependency(config Config, sourceLayer string, targetLayer string, targetRel string) (string, bool) {
+	for _, rule := range config.LayerRules {
+		if sourceLayer != rule.SourceLayer || targetLayer != rule.TargetLayer {
+			continue
 		}
-	case "usecase":
-		if targetLayer == "adapter" {
-			return "usecase must not import adapter", true
+		if rule.TargetRelPrefix != "" && !strings.HasPrefix(targetRel, rule.TargetRelPrefix) {
+			continue
 		}
-	case "runtime":
-		if targetLayer == "adapter" && strings.HasPrefix(targetRel, "adapter/httpauth") {
-			return "runtime must not import HTTP API adapter", true
+		message := rule.Message
+		if message == "" {
+			message = sourceLayer + " must not import " + targetLayer
 		}
-	case "infra":
-		if targetLayer == "domain" || targetLayer == "usecase" || targetLayer == "adapter" {
-			return "infra must not import business layers", true
-		}
+		return message, true
 	}
 	return "", false
 }

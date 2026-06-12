@@ -14,7 +14,8 @@ import (
 // ModuleMapperRules declares boundary rules for module mapper.go files.
 type ModuleMapperRules struct {
 	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root string
+	Root   string
+	Config Config
 }
 
 // MapperBoundaryViolation describes one mapper boundary violation.
@@ -51,7 +52,7 @@ func (r ModuleMapperRules) AssertMapperBoundary(t *testing.T) {
 
 // MapperBoundaryViolations returns all module mapper boundary violations.
 func (r ModuleMapperRules) MapperBoundaryViolations() ([]MapperBoundaryViolation, error) {
-	moduleDirs, err := modulePackageDirs(r.Root, "ModuleMapperRules")
+	moduleDirs, err := modulePackageDirsWithConfig(r.Root, "ModuleMapperRules", r.Config)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +68,7 @@ func (r ModuleMapperRules) MapperBoundaryViolations() ([]MapperBoundaryViolation
 			if strings.HasSuffix(file, "_test.go") {
 				continue
 			}
-			fileViolations, err := mapperBoundaryViolationsInFile(file)
+			fileViolations, err := mapperBoundaryViolationsInFile(r.Config, file)
 			if err != nil {
 				return nil, err
 			}
@@ -78,7 +79,7 @@ func (r ModuleMapperRules) MapperBoundaryViolations() ([]MapperBoundaryViolation
 	return violations, nil
 }
 
-func mapperBoundaryViolationsInFile(filename string) ([]MapperBoundaryViolation, error) {
+func mapperBoundaryViolationsInFile(config Config, filename string) ([]MapperBoundaryViolation, error) {
 	fileSet := token.NewFileSet()
 	parsedFile, err := parser.ParseFile(fileSet, filename, nil, parser.SkipObjectResolution)
 	if err != nil {
@@ -87,18 +88,18 @@ func mapperBoundaryViolationsInFile(filename string) ([]MapperBoundaryViolation,
 
 	switch filepath.Base(filename) {
 	case "mapper.go":
-		return mapperFileBoundaryViolations(fileSet, filename, parsedFile), nil
+		return mapperFileBoundaryViolations(fileSet, filename, config.withDefaults(), parsedFile), nil
 	case "schema.go":
 		return nil, nil
 	}
 	return nonMapperFileBoundaryViolations(fileSet, filename, parsedFile), nil
 }
 
-func mapperFileBoundaryViolations(fileSet *token.FileSet, filename string, parsedFile *ast.File) []MapperBoundaryViolation {
+func mapperFileBoundaryViolations(fileSet *token.FileSet, filename string, config Config, parsedFile *ast.File) []MapperBoundaryViolation {
 	var violations []MapperBoundaryViolation
 	for _, importSpec := range parsedFile.Imports {
 		importPath := strings.Trim(importSpec.Path.Value, `"`)
-		if !isForbiddenMapperImport(importPath) {
+		if !isForbiddenMapperImport(config, importPath) {
 			continue
 		}
 		position := fileSet.Position(importSpec.Pos())
@@ -151,13 +152,8 @@ func nonMapperFileBoundaryViolations(fileSet *token.FileSet, filename string, pa
 	return violations
 }
 
-func isForbiddenMapperImport(importPath string) bool {
-	return importPath == "context" ||
-		importPath == "database/sql" ||
-		importPath == "net/http" ||
-		importPath == "github.com/danielgtaylor/huma/v2" ||
-		importPath == "github.com/uptrace/bun" ||
-		importPath == "gorm.io/gorm"
+func isForbiddenMapperImport(config Config, importPath string) bool {
+	return stringIn(importPath, config.withDefaults().MapperForbiddenImports)
 }
 
 func isMapperFunctionName(name string) bool {

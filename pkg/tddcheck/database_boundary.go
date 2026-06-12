@@ -11,7 +11,8 @@ import (
 )
 
 type DatabaseTestRules struct {
-	Root string
+	Root   string
+	Config Config
 }
 
 type DatabaseTestViolation struct {
@@ -44,6 +45,7 @@ func (r DatabaseTestRules) AssertDatabaseTestBoundary(t *testing.T) {
 }
 
 func (r DatabaseTestRules) DatabaseTestBoundaryViolations() ([]DatabaseTestViolation, error) {
+	config := r.Config.withDefaults()
 	root, err := r.root()
 	if err != nil {
 		return nil, err
@@ -66,7 +68,7 @@ func (r DatabaseTestRules) DatabaseTestBoundaryViolations() ([]DatabaseTestViola
 			return nil
 		}
 		repoPath := filepath.ToSlash(path)
-		if databaseTestBoundaryAllowed(repoPath) {
+		if databaseTestBoundaryAllowed(config, repoPath) {
 			return nil
 		}
 		data, readErr := fs.ReadFile(rootFS, path)
@@ -74,18 +76,18 @@ func (r DatabaseTestRules) DatabaseTestBoundaryViolations() ([]DatabaseTestViola
 			return readErr
 		}
 		content := string(data)
-		if strings.Contains(content, "database.OpenSQLite") && strings.Contains(content, "filepath.Join(t.TempDir()") {
+		if strings.Contains(content, config.DatabaseTest.OpenNeedle) && strings.Contains(content, config.DatabaseTest.TempDirNeedle) {
 			violations = append(violations, DatabaseTestViolation{
 				File:    repoPath,
-				Line:    lineOf(content, "database.OpenSQLite"),
-				Message: "ordinary SQLite tests must use dbtest.Open",
+				Line:    lineOf(content, config.DatabaseTest.OpenNeedle),
+				Message: config.DatabaseTest.OpenMessage,
 			})
 		}
-		if strings.Contains(content, "cfg.Server.DB.SQLite = filepath.Join(t.TempDir()") {
+		if strings.Contains(content, config.DatabaseTest.ConfigPathNeedle) {
 			violations = append(violations, DatabaseTestViolation{
 				File:    repoPath,
-				Line:    lineOf(content, "cfg.Server.DB.SQLite = filepath.Join(t.TempDir()"),
-				Message: "ordinary SQLite config tests must use dbtest.Open or explicit test exemption",
+				Line:    lineOf(content, config.DatabaseTest.ConfigPathNeedle),
+				Message: config.DatabaseTest.ConfigPathMessage,
 			})
 		}
 		return nil
@@ -110,15 +112,8 @@ func (r DatabaseTestRules) root() (string, error) {
 	return filepath.Join(projectRoot, r.Root), nil
 }
 
-func databaseTestBoundaryAllowed(path string) bool {
-	switch path {
-	case "internal/infra/database/database_test.go":
-		return true
-	case "internal/tddcheck/database_boundary_test.go":
-		return true
-	default:
-		return false
-	}
+func databaseTestBoundaryAllowed(config Config, path string) bool {
+	return stringIn(path, config.DatabaseTest.AllowedPaths)
 }
 
 func lineOf(content string, needle string) int {

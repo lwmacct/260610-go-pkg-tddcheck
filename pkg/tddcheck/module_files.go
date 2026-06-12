@@ -9,13 +9,16 @@ import (
 	"strings"
 )
 
-var moduleLayerDirs = []string{"domain", "usecase", "adapter", "runtime", "infra"}
-
 func moduleFiles(root string, ruleName string, match func(string) bool) ([]string, error) {
-	roots, err := moduleScanRoots(root, ruleName)
+	return moduleFilesWithConfig(root, ruleName, Config{}, match)
+}
+
+func moduleFilesWithConfig(root string, ruleName string, config Config, match func(string) bool) ([]string, error) {
+	roots, err := moduleScanRootsWithConfig(root, ruleName, config)
 	if err != nil {
 		return nil, err
 	}
+	config = config.withDefaults()
 
 	var matches []string
 	for _, scanRoot := range roots {
@@ -24,7 +27,7 @@ func moduleFiles(root string, ruleName string, match func(string) bool) ([]strin
 				return err
 			}
 			if entry.IsDir() {
-				if shouldSkipModuleScanDir(entry.Name()) {
+				if shouldSkipModuleScanDirWithConfig(entry.Name(), config) {
 					return filepath.SkipDir
 				}
 				return nil
@@ -43,10 +46,15 @@ func moduleFiles(root string, ruleName string, match func(string) bool) ([]strin
 }
 
 func modulePackageDirs(root string, ruleName string) ([]string, error) {
-	roots, err := moduleScanRoots(root, ruleName)
+	return modulePackageDirsWithConfig(root, ruleName, Config{})
+}
+
+func modulePackageDirsWithConfig(root string, ruleName string, config Config) ([]string, error) {
+	roots, err := moduleScanRootsWithConfig(root, ruleName, config)
 	if err != nil {
 		return nil, err
 	}
+	config = config.withDefaults()
 
 	seen := make(map[string]struct{})
 	for _, scanRoot := range roots {
@@ -55,7 +63,7 @@ func modulePackageDirs(root string, ruleName string) ([]string, error) {
 				return err
 			}
 			if entry.IsDir() {
-				if shouldSkipModuleScanDir(entry.Name()) {
+				if shouldSkipModuleScanDirWithConfig(entry.Name(), config) {
 					return filepath.SkipDir
 				}
 				return nil
@@ -79,13 +87,18 @@ func modulePackageDirs(root string, ruleName string) ([]string, error) {
 }
 
 func moduleScanRoots(root string, ruleName string) ([]string, error) {
+	return moduleScanRootsWithConfig(root, ruleName, Config{})
+}
+
+func moduleScanRootsWithConfig(root string, ruleName string, config Config) ([]string, error) {
 	resolved, err := resolveRuleRoot(root, ruleName)
 	if err != nil {
 		return nil, err
 	}
+	config = config.withDefaults()
 
 	var layered []string
-	for _, layer := range moduleLayerDirs {
+	for _, layer := range config.LayerDirs {
 		dir := filepath.Join(resolved, layer)
 		info, err := os.Stat(dir)
 		if err == nil && info.IsDir() {
@@ -114,5 +127,13 @@ func resolveRuleRoot(root string, ruleName string) (string, error) {
 }
 
 func shouldSkipModuleScanDir(name string) bool {
-	return strings.HasPrefix(name, ".") || name == "vendor" || name == "node_modules"
+	return shouldSkipModuleScanDirWithConfig(name, Config{})
+}
+
+func shouldSkipModuleScanDirWithConfig(name string, config Config) bool {
+	config = config.withDefaults()
+	if strings.HasPrefix(name, ".") {
+		return true
+	}
+	return stringIn(name, config.SkipDirs)
 }

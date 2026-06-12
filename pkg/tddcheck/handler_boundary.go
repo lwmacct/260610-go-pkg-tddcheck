@@ -14,7 +14,8 @@ import (
 // ModuleHandlerRules declares boundary rules for module handler files.
 type ModuleHandlerRules struct {
 	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root string
+	Root   string
+	Config Config
 }
 
 // HandlerBoundaryViolation describes one handler boundary violation.
@@ -51,7 +52,7 @@ func (r ModuleHandlerRules) AssertHandlerBoundary(t *testing.T) {
 
 // HandlerBoundaryViolations returns all module handler boundary violations.
 func (r ModuleHandlerRules) HandlerBoundaryViolations() ([]HandlerBoundaryViolation, error) {
-	moduleDirs, err := modulePackageDirs(r.Root, "ModuleHandlerRules")
+	moduleDirs, err := modulePackageDirsWithConfig(r.Root, "ModuleHandlerRules", r.Config)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +68,7 @@ func (r ModuleHandlerRules) HandlerBoundaryViolations() ([]HandlerBoundaryViolat
 			if strings.HasSuffix(file, "_test.go") {
 				continue
 			}
-			fileViolations, err := handlerBoundaryViolationsInFile(file)
+			fileViolations, err := handlerBoundaryViolationsInFile(r.Config, file)
 			if err != nil {
 				return nil, err
 			}
@@ -78,7 +79,7 @@ func (r ModuleHandlerRules) HandlerBoundaryViolations() ([]HandlerBoundaryViolat
 	return violations, nil
 }
 
-func handlerBoundaryViolationsInFile(filename string) ([]HandlerBoundaryViolation, error) {
+func handlerBoundaryViolationsInFile(config Config, filename string) ([]HandlerBoundaryViolation, error) {
 	fileSet := token.NewFileSet()
 	parsedFile, err := parser.ParseFile(fileSet, filename, nil, parser.SkipObjectResolution)
 	if err != nil {
@@ -95,7 +96,7 @@ func handlerBoundaryViolationsInFile(filename string) ([]HandlerBoundaryViolatio
 	}
 	for _, importSpec := range parsedFile.Imports {
 		importPath := strings.Trim(importSpec.Path.Value, `"`)
-		if !isForbiddenHandlerImport(importPath) {
+		if !isForbiddenHandlerImport(config, importPath) {
 			continue
 		}
 		position := fileSet.Position(importSpec.Pos())
@@ -108,7 +109,7 @@ func handlerBoundaryViolationsInFile(filename string) ([]HandlerBoundaryViolatio
 
 	ast.Inspect(parsedFile, func(node ast.Node) bool {
 		selector, ok := node.(*ast.SelectorExpr)
-		if !ok || !isForbiddenHandlerCall(selector.Sel.Name) {
+		if !ok || !isForbiddenHandlerCall(config, selector.Sel.Name) {
 			return true
 		}
 		position := fileSet.Position(selector.Sel.Pos())
@@ -502,16 +503,10 @@ func hasAnySuffix(value string, suffixes ...string) bool {
 	return false
 }
 
-func isForbiddenHandlerImport(importPath string) bool {
-	return importPath == "github.com/uptrace/bun" ||
-		importPath == "gorm.io/gorm"
+func isForbiddenHandlerImport(config Config, importPath string) bool {
+	return stringIn(importPath, config.withDefaults().HandlerForbiddenImports)
 }
 
-func isForbiddenHandlerCall(name string) bool {
-	return name == "NewSelect" ||
-		name == "NewInsert" ||
-		name == "NewUpdate" ||
-		name == "NewDelete" ||
-		name == "RunInTx" ||
-		name == "BeginTx"
+func isForbiddenHandlerCall(config Config, name string) bool {
+	return stringIn(name, config.withDefaults().HandlerForbiddenCalls)
 }

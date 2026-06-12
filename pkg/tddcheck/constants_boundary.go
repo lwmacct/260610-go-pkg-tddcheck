@@ -14,7 +14,8 @@ import (
 // ModuleConstantsRules declares mechanical boundary rules for module constants.go files.
 type ModuleConstantsRules struct {
 	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root string
+	Root   string
+	Config Config
 }
 
 // ConstantsBoundaryViolation describes one constants boundary violation.
@@ -51,7 +52,7 @@ func (r ModuleConstantsRules) AssertConstantsBoundaries(t *testing.T) {
 
 // ConstantsBoundaryViolations returns all module constants boundary violations.
 func (r ModuleConstantsRules) ConstantsBoundaryViolations() ([]ConstantsBoundaryViolation, error) {
-	moduleDirs, err := modulePackageDirs(r.Root, "ModuleConstantsRules")
+	moduleDirs, err := modulePackageDirsWithConfig(r.Root, "ModuleConstantsRules", r.Config)
 	if err != nil {
 		return nil, err
 	}

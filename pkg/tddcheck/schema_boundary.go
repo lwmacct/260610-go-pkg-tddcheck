@@ -14,7 +14,8 @@ import (
 // ModuleSchemaRules declares mechanical boundary rules for module schema.go files.
 type ModuleSchemaRules struct {
 	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root string
+	Root   string
+	Config Config
 }
 
 // SchemaBoundaryViolation describes one schema boundary violation.
@@ -51,7 +52,7 @@ func (r ModuleSchemaRules) AssertSchemaBoundaries(t *testing.T) {
 
 // SchemaBoundaryViolations returns all module schema boundary violations.
 func (r ModuleSchemaRules) SchemaBoundaryViolations() ([]SchemaBoundaryViolation, error) {
-	moduleDirs, err := modulePackageDirs(r.Root, "ModuleSchemaRules")
+	moduleDirs, err := modulePackageDirsWithConfig(r.Root, "ModuleSchemaRules", r.Config)
 	if err != nil {
 		return nil, err
 	}

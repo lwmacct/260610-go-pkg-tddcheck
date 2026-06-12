@@ -12,7 +12,8 @@ import (
 // ModuleErrorRules declares naming rules for module errors.go files.
 type ModuleErrorRules struct {
 	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root string
+	Root   string
+	Config Config
 }
 
 // ErrorPrefixViolation describes one error variable that does not match Err rules.
@@ -51,7 +52,7 @@ func (r ModuleErrorRules) AssertErrorPrefix(t *testing.T) {
 // ErrorPrefixViolations returns all package-level error variables in module
 // errors.go files that do not start with Err.
 func (r ModuleErrorRules) ErrorPrefixViolations() ([]ErrorPrefixViolation, error) {
-	matches, err := moduleFiles(r.Root, "ModuleErrorRules", func(name string) bool { return name == "errors.go" })
+	matches, err := moduleFilesWithConfig(r.Root, "ModuleErrorRules", r.Config, func(name string) bool { return name == "errors.go" })
 	if err != nil {
 		return nil, err
 	}

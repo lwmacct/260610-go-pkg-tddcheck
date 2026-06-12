@@ -14,7 +14,8 @@ import (
 // ModuleServiceRules declares mechanical boundary rules for module Service files.
 type ModuleServiceRules struct {
 	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root string
+	Root   string
+	Config Config
 }
 
 // ServiceBoundaryViolation describes one service boundary violation.
@@ -51,7 +52,7 @@ func (r ModuleServiceRules) AssertServiceBoundaries(t *testing.T) {
 
 // ServiceBoundaryViolations returns all module service boundary violations.
 func (r ModuleServiceRules) ServiceBoundaryViolations() ([]ServiceBoundaryViolation, error) {
-	moduleDirs, err := modulePackageDirs(r.Root, "ModuleServiceRules")
+	moduleDirs, err := modulePackageDirsWithConfig(r.Root, "ModuleServiceRules", r.Config)
 	if err != nil {
 		return nil, err
 	}

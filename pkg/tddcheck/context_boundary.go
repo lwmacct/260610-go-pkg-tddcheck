@@ -14,7 +14,8 @@ import (
 // ModuleContextRules declares mechanical boundary rules for module context.go files.
 type ModuleContextRules struct {
 	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root string
+	Root   string
+	Config Config
 }
 
 // ContextBoundaryViolation describes one context boundary violation.
@@ -51,7 +52,7 @@ func (r ModuleContextRules) AssertContextBoundaries(t *testing.T) {
 
 // ContextBoundaryViolations returns all module context boundary violations.
 func (r ModuleContextRules) ContextBoundaryViolations() ([]ContextBoundaryViolation, error) {
-	moduleDirs, err := modulePackageDirs(r.Root, "ModuleContextRules")
+	moduleDirs, err := modulePackageDirsWithConfig(r.Root, "ModuleContextRules", r.Config)
 	if err != nil {
 		return nil, err
 	}

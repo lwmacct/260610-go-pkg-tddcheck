@@ -14,7 +14,8 @@ import (
 // ModulePublicAPIRules declares mechanical public API naming rules.
 type ModulePublicAPIRules struct {
 	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root string
+	Root   string
+	Config Config
 }
 
 // PublicAPINameViolation describes one public API naming violation.
@@ -51,7 +52,7 @@ func (r ModulePublicAPIRules) AssertPublicAPINames(t *testing.T) {
 
 // PublicAPINameViolations returns all public API naming violations.
 func (r ModulePublicAPIRules) PublicAPINameViolations() ([]PublicAPINameViolation, error) {
-	moduleDirs, err := modulePackageDirs(r.Root, "ModulePublicAPIRules")
+	moduleDirs, err := modulePackageDirsWithConfig(r.Root, "ModulePublicAPIRules", r.Config)
 	if err != nil {
 		return nil, err
 	}

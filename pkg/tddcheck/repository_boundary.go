@@ -15,7 +15,8 @@ import (
 // ModuleRepositoryRules declares boundary rules for module repository files.
 type ModuleRepositoryRules struct {
 	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root string
+	Root   string
+	Config Config
 }
 
 // RepositoryBoundaryViolation describes one repository boundary violation.
@@ -52,7 +53,7 @@ func (r ModuleRepositoryRules) AssertRepositoryBoundary(t *testing.T) {
 
 // RepositoryBoundaryViolations returns all module repository boundary violations.
 func (r ModuleRepositoryRules) RepositoryBoundaryViolations() ([]RepositoryBoundaryViolation, error) {
-	moduleDirs, err := modulePackageDirs(r.Root, "ModuleRepositoryRules")
+	moduleDirs, err := modulePackageDirsWithConfig(r.Root, "ModuleRepositoryRules", r.Config)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +69,7 @@ func (r ModuleRepositoryRules) RepositoryBoundaryViolations() ([]RepositoryBound
 			if strings.HasSuffix(file, "_test.go") {
 				continue
 			}
-			fileViolations, err := repositoryBoundaryViolationsInFile(file)
+			fileViolations, err := repositoryBoundaryViolationsInFile(r.Config, file)
 			if err != nil {
 				return nil, err
 			}
@@ -79,7 +80,7 @@ func (r ModuleRepositoryRules) RepositoryBoundaryViolations() ([]RepositoryBound
 	return violations, nil
 }
 
-func repositoryBoundaryViolationsInFile(filename string) ([]RepositoryBoundaryViolation, error) {
+func repositoryBoundaryViolationsInFile(config Config, filename string) ([]RepositoryBoundaryViolation, error) {
 	fileSet := token.NewFileSet()
 	parsedFile, err := parser.ParseFile(fileSet, filename, nil, parser.SkipObjectResolution)
 	if err != nil {
@@ -89,15 +90,15 @@ func repositoryBoundaryViolationsInFile(filename string) ([]RepositoryBoundaryVi
 	var violations []RepositoryBoundaryViolation
 	isRepositoryFile := filepath.Base(filename) == "repository.go"
 	if isRepositoryFile {
-		violations = append(violations, repositoryDeclarationBoundaryViolations(fileSet, filename, parsedFile)...)
+		violations = append(violations, repositoryDeclarationBoundaryViolations(fileSet, filename, config.withDefaults(), parsedFile)...)
 	} else {
-		violations = append(violations, nonRepositoryDeclarationBoundaryViolations(fileSet, filename, parsedFile)...)
+		violations = append(violations, nonRepositoryDeclarationBoundaryViolations(fileSet, filename, config.withDefaults(), parsedFile)...)
 		return violations, nil
 	}
 
 	for _, importSpec := range parsedFile.Imports {
 		importPath := strings.Trim(importSpec.Path.Value, `"`)
-		if !isForbiddenRepositoryImport(importPath) {
+		if !isForbiddenRepositoryImport(config, importPath) {
 			continue
 		}
 		position := fileSet.Position(importSpec.Pos())
@@ -152,7 +153,7 @@ func repositoryBoundaryViolationsInFile(filename string) ([]RepositoryBoundaryVi
 	return violations, nil
 }
 
-func repositoryDeclarationBoundaryViolations(fileSet *token.FileSet, filename string, parsedFile *ast.File) []RepositoryBoundaryViolation {
+func repositoryDeclarationBoundaryViolations(fileSet *token.FileSet, filename string, config Config, parsedFile *ast.File) []RepositoryBoundaryViolation {
 	var violations []RepositoryBoundaryViolation
 	for _, decl := range parsedFile.Decls {
 		switch typed := decl.(type) {
@@ -171,7 +172,7 @@ func repositoryDeclarationBoundaryViolations(fileSet *token.FileSet, filename st
 			}
 			for _, spec := range typed.Specs {
 				typeSpec, ok := spec.(*ast.TypeSpec)
-				if !ok || isAllowedRepositoryType(typeSpec) {
+				if !ok || isAllowedRepositoryType(config, typeSpec) {
 					continue
 				}
 				position := fileSet.Position(typeSpec.Pos())
@@ -184,7 +185,7 @@ func repositoryDeclarationBoundaryViolations(fileSet *token.FileSet, filename st
 		case *ast.FuncDecl:
 			position := fileSet.Position(typed.Pos())
 			if typed.Recv != nil {
-				if isRepositoryReceiver(receiverTypeName(typed.Recv)) {
+				if isRepositoryReceiver(config, receiverTypeName(typed.Recv)) {
 					continue
 				}
 				violations = append(violations, RepositoryBoundaryViolation{
@@ -206,7 +207,7 @@ func repositoryDeclarationBoundaryViolations(fileSet *token.FileSet, filename st
 	return violations
 }
 
-func nonRepositoryDeclarationBoundaryViolations(fileSet *token.FileSet, filename string, parsedFile *ast.File) []RepositoryBoundaryViolation {
+func nonRepositoryDeclarationBoundaryViolations(fileSet *token.FileSet, filename string, config Config, parsedFile *ast.File) []RepositoryBoundaryViolation {
 	var violations []RepositoryBoundaryViolation
 	for _, decl := range parsedFile.Decls {
 		switch typed := decl.(type) {
@@ -238,7 +239,7 @@ func nonRepositoryDeclarationBoundaryViolations(fileSet *token.FileSet, filename
 				}
 				continue
 			}
-			if !isRepositoryReceiver(receiverTypeName(typed.Recv)) {
+			if !isRepositoryReceiver(config, receiverTypeName(typed.Recv)) {
 				continue
 			}
 			violations = append(violations, RepositoryBoundaryViolation{
@@ -251,12 +252,12 @@ func nonRepositoryDeclarationBoundaryViolations(fileSet *token.FileSet, filename
 	return violations
 }
 
-func isAllowedRepositoryType(typeSpec *ast.TypeSpec) bool {
+func isAllowedRepositoryType(config Config, typeSpec *ast.TypeSpec) bool {
 	if typeSpec.Assign.IsValid() {
 		return false
 	}
 	name := typeSpec.Name.Name
-	if name == "bunRepository" ||
+	if stringIn(name, config.RepositoryImplementationNames) ||
 		strings.HasSuffix(name, "repository") ||
 		strings.HasSuffix(name, "RepositoryImpl") ||
 		(!ast.IsExported(name) && strings.HasSuffix(name, "Repository")) {
@@ -269,17 +270,15 @@ func isAllowedRepositoryType(typeSpec *ast.TypeSpec) bool {
 	return false
 }
 
-func isRepositoryReceiver(name string) bool {
-	return name == "bunRepository" ||
+func isRepositoryReceiver(config Config, name string) bool {
+	return stringIn(name, config.RepositoryImplementationNames) ||
 		strings.HasSuffix(name, "RepositoryImpl") ||
 		strings.HasSuffix(name, "repository") ||
 		strings.HasSuffix(name, "Repository")
 }
 
-func isForbiddenRepositoryImport(importPath string) bool {
-	return importPath == "net/http" ||
-		importPath == "github.com/danielgtaylor/huma/v2" ||
-		importPath == "github.com/coder/websocket"
+func isForbiddenRepositoryImport(config Config, importPath string) bool {
+	return stringIn(importPath, config.withDefaults().RepositoryForbiddenImports)
 }
 
 func returnsDTO(results *ast.FieldList) bool {

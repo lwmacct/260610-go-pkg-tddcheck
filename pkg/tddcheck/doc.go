@@ -10,4 +10,7 @@
 //	func TestArchitecture(t *testing.T) {
 //	    tddcheck.ProjectRules{Root: "internal"}.Assert(t)
 //	}
+//
+// Project-specific policy can be customized through Config while preserving the
+// same rule APIs.
 package tddcheck

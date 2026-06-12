@@ -45,7 +45,7 @@ func (r ModuleErrorRules) AssertErrorsBoundaries(t *testing.T) {
 
 // ErrorsBoundaryViolations returns all module errors boundary violations.
 func (r ModuleErrorRules) ErrorsBoundaryViolations() ([]ErrorsBoundaryViolation, error) {
-	moduleDirs, err := modulePackageDirs(r.Root, "ModuleErrorRules")
+	moduleDirs, err := modulePackageDirsWithConfig(r.Root, "ModuleErrorRules", r.Config)
 	if err != nil {
 		return nil, err
 	}
