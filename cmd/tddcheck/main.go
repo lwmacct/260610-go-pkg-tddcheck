@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/lwmacct/260610-tddcheck/pkg/tddcheck"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck"
 )
 
 var version = "dev"

@@ -1,10 +1,10 @@
 # tddcheck
 
-[![License](https://img.shields.io/github/license/lwmacct/260610-tddcheck)](LICENSE)
-[![Go Reference](https://pkg.go.dev/badge/github.com/lwmacct/260610-tddcheck.svg)](https://pkg.go.dev/github.com/lwmacct/260610-tddcheck)
-[![Go CI](https://github.com/lwmacct/260610-tddcheck/actions/workflows/go-ci.yml/badge.svg)](https://github.com/lwmacct/260610-tddcheck/actions/workflows/go-ci.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/lwmacct/260610-tddcheck)](https://goreportcard.com/report/github.com/lwmacct/260610-tddcheck)
-[![GitHub Tag](https://img.shields.io/github/v/tag/lwmacct/260610-tddcheck?sort=semver)](https://github.com/lwmacct/260610-tddcheck/tags)
+[![License](https://img.shields.io/github/license/lwmacct/260610-go-pkg-tddcheck)](LICENSE)
+[![Go Reference](https://pkg.go.dev/badge/github.com/lwmacct/260610-go-pkg-tddcheck.svg)](https://pkg.go.dev/github.com/lwmacct/260610-go-pkg-tddcheck)
+[![Go CI](https://github.com/lwmacct/260610-go-pkg-tddcheck/actions/workflows/go-ci.yml/badge.svg)](https://github.com/lwmacct/260610-go-pkg-tddcheck/actions/workflows/go-ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/lwmacct/260610-go-pkg-tddcheck)](https://goreportcard.com/report/github.com/lwmacct/260610-go-pkg-tddcheck)
+[![GitHub Tag](https://img.shields.io/github/v/tag/lwmacct/260610-go-pkg-tddcheck?sort=semver)](https://github.com/lwmacct/260610-go-pkg-tddcheck/tags)
 
 `tddcheck` is a Go AST based unit-test helper for enforcing observable TDD
 conventions.
@@ -17,7 +17,7 @@ pre-commit.
 ## Install
 
 ```bash
-go get github.com/lwmacct/260610-tddcheck/pkg/tddcheck
+go get github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck
 ```
 
 ## Unit Test Usage
@@ -30,7 +30,7 @@ package project_test
 import (
     "testing"
 
-    "github.com/lwmacct/260610-tddcheck/pkg/tddcheck"
+    "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck"
 )
 
 func TestTDDPolicy(t *testing.T) {
@@ -99,7 +99,7 @@ add a policy test:
 
 ```yaml
 repos:
-  - repo: https://github.com/lwmacct/260610-tddcheck
+  - repo: https://github.com/lwmacct/260610-go-pkg-tddcheck
     rev: v0.1.0
     hooks:
       - id: tddcheck
@@ -108,7 +108,7 @@ repos:
 ## CLI
 
 ```bash
-go install github.com/lwmacct/260610-tddcheck/cmd/tddcheck@latest
+go install github.com/lwmacct/260610-go-pkg-tddcheck/cmd/tddcheck@latest
 tddcheck --root .
 tddcheck --staged
 ```
