@@ -24,7 +24,7 @@ import (
 	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/files/validation"
 	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/other/databasetest"
 	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/other/errorprefix"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/other/layer"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/other/layerdeps"
 	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/other/packagename"
 	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/other/publicapi"
 )
@@ -117,7 +117,7 @@ func (r ProjectRules) Check() Result {
 		return add(rule, values, err)
 	}
 
-	if err := run(layer.Meta.ID, checkLayer); err != nil {
+	if err := run(layerdeps.Meta.ID, checkLayer); err != nil {
 		return resultError(err, violations, start)
 	}
 	if err := run(packagename.Meta.ID, checkPackageName); err != nil {
@@ -194,9 +194,9 @@ func resultError(err error, violations []Violation, start time.Time) Result {
 }
 
 func checkLayer(root string, config Config) ([]Violation, error) {
-	values, err := layer.New(root, rulekit.WithConfig(config)).LayerDependencyViolations()
-	return mapViolations(layer.Meta.ID, values, err, func(v layer.LayerDependencyViolation) Violation {
-		return Violation{Rule: layer.Meta.ID, File: v.File, Line: v.Line, Message: v.Message + ": " + v.ImportPath}
+	values, err := layerdeps.New(root, rulekit.WithConfig(config)).LayerDependencyViolations()
+	return mapViolations(layerdeps.Meta.ID, values, err, func(v layerdeps.LayerDependencyViolation) Violation {
+		return Violation{Rule: layerdeps.Meta.ID, File: v.File, Line: v.Line, Message: v.Message + ": " + v.ImportPath}
 	})
 }
 

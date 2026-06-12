@@ -1,4 +1,4 @@
-package layer
+package layerdeps
 
 import (
 	"testing"

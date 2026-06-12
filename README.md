@@ -41,10 +41,10 @@ func TestArchitecture(t *testing.T) {
 规则包按目录分为 `rules/files` 和 `rules/other`。目录用于浏览，规则自身的机器可读分类由每个规则包的 `Meta.Kind` 提供，例如 `file`、`name`、`dependency` 和 `test`。
 
 ```go
-import "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/other/layer"
+import "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/other/layerdeps"
 
 func TestLayerDependencies(t *testing.T) {
-    layer.New("internal").Assert(t)
+    layerdeps.New("internal").Assert(t)
 }
 ```
 
@@ -60,7 +60,7 @@ import (
 
     "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/other/databasetest"
     "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/files/dto"
-    "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/other/layer"
+    "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/other/layerdeps"
 )
 
 type assertRule interface {
@@ -72,7 +72,7 @@ func TestRules(t *testing.T) {
         name string
         rule assertRule
     }{
-        {"dependency-layer", layer.New("internal")},
+        {"dependency-layerdeps", layerdeps.New("internal")},
         {"file-dto", dto.New("internal")},
         {"test-database", databasetest.New(".")},
     }
@@ -96,7 +96,7 @@ go test ./internal/testutil/tddcheck -run 'TestRules/file-dto'
 
 `ProjectRules` 默认运行以下检查：
 
-- `dependency-layer`：`domain`、`usecase`、`adapter`、`runtime`、`infra` 的 import 遵守依赖方向。
+- `dependency-layerdeps`：`domain`、`usecase`、`adapter`、`runtime`、`infra` 的 import 遵守依赖方向。
 - `name-package`：包名与目录名一致。
 - `file-constants`：包级常量必须放在 `constants.go`。
 - `file-entity`：具体实体和值对象类型必须放在 `entity.go`。
