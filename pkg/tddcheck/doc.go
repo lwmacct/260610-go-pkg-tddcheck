@@ -11,6 +11,7 @@
 //	    tddcheck.ProjectRules{Root: "internal"}.Assert(t)
 //	}
 //
-// Project-specific policy can be customized through Config while preserving the
-// same rule APIs.
+// Project-specific policy can be customized through Config. ProjectRules is the
+// recommended public entry point; individual rules are available under
+// pkg/tddcheck/rules for focused checks.
 package tddcheck

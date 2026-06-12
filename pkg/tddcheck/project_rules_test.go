@@ -3,11 +3,13 @@ package tddcheck
 import (
 	"strings"
 	"testing"
+
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/testkit"
 )
 
 func TestProjectRulesCheckPassesCleanProject(t *testing.T) {
 	root := t.TempDir()
-	writeFile(t, root, "domain/identityuser/entity.go", `package identityuser
+	testkit.WriteFile(t, root, "domain/identityuser/entity.go", `package identityuser
 
 type User struct {}
 `)
@@ -23,7 +25,7 @@ type User struct {}
 
 func TestProjectRulesCheckReportsViolations(t *testing.T) {
 	root := t.TempDir()
-	writeFile(t, root, "domain/identityuser/service.go", `package user
+	testkit.WriteFile(t, root, "domain/identityuser/service.go", `package user
 
 const state = "bad"
 `)
@@ -45,7 +47,7 @@ const state = "bad"
 
 func TestProjectRulesAssert(t *testing.T) {
 	root := t.TempDir()
-	writeFile(t, root, "domain/identityuser/entity.go", `package identityuser
+	testkit.WriteFile(t, root, "domain/identityuser/entity.go", `package identityuser
 
 type User struct {}
 `)

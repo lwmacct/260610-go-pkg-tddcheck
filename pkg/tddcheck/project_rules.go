@@ -2,10 +2,30 @@ package tddcheck
 
 import (
 	"fmt"
+	"reflect"
 	"slices"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/constants"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/context"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/cqrs"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/database"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/dto"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/entity"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/errorboundary"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/errorprefix"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/handler"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/layer"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/mapper"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/packagename"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/publicapi"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/repository"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/schema"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/service"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/utils"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/validation"
 )
 
 // Violation is a normalized architecture rule violation.
@@ -173,46 +193,46 @@ func resultError(err error, violations []Violation, start time.Time) Result {
 }
 
 func checkLayer(root string, config Config) ([]Violation, error) {
-	values, err := (ModuleLayerRules{Root: root, Config: config}).LayerDependencyViolations()
-	return mapViolations("layer", values, err, func(v LayerDependencyViolation) Violation {
+	values, err := (layer.ModuleLayerRules{Root: root, Config: config}).LayerDependencyViolations()
+	return mapViolations("layer", values, err, func(v layer.LayerDependencyViolation) Violation {
 		return Violation{Rule: "layer", File: v.File, Line: v.Line, Message: v.Message + ": " + v.ImportPath}
 	})
 }
 
 func checkPackageName(root string, config Config) ([]Violation, error) {
-	values, err := (ModulePackageNameRules{Root: root, Config: config}).PackageNameViolations()
+	values, err := (packagename.ModulePackageNameRules{Root: root, Config: config}).PackageNameViolations()
 	return mapMessageViolations("package-name", values, err)
 }
 
 func checkConstants(root string, config Config) ([]Violation, error) {
-	values, err := (ModuleConstantsRules{Root: root, Config: config}).ConstantsBoundaryViolations()
+	values, err := (constants.ModuleConstantsRules{Root: root, Config: config}).ConstantsBoundaryViolations()
 	return mapMessageViolations("constants", values, err)
 }
 
 func checkEntity(root string, config Config) ([]Violation, error) {
-	values, err := (ModuleEntityRules{Root: root, Config: config}).EntityBoundaryViolations()
+	values, err := (entity.ModuleEntityRules{Root: root, Config: config}).EntityBoundaryViolations()
 	return mapMessageViolations("entity", values, err)
 }
 
 func checkErrors(root string, config Config) ([]Violation, error) {
-	values, err := (ModuleErrorRules{Root: root, Config: config}).ErrorsBoundaryViolations()
+	values, err := (errorboundary.ModuleErrorRules{Root: root, Config: config}).ErrorsBoundaryViolations()
 	return mapMessageViolations("errors", values, err)
 }
 
 func checkErrorPrefix(root string, config Config) ([]Violation, error) {
-	values, err := (ModuleErrorRules{Root: root, Config: config}).ErrorPrefixViolations()
-	return mapViolations("error-prefix", values, err, func(v ErrorPrefixViolation) Violation {
+	values, err := (errorprefix.ModuleErrorRules{Root: root, Config: config}).ErrorPrefixViolations()
+	return mapViolations("error-prefix", values, err, func(v errorprefix.ErrorPrefixViolation) Violation {
 		return Violation{Rule: "error-prefix", File: v.File, Line: v.Line, Message: fmt.Sprintf("error variable %s must start with Err", v.Name)}
 	})
 }
 
 func checkContext(root string, config Config) ([]Violation, error) {
-	values, err := (ModuleContextRules{Root: root, Config: config}).ContextBoundaryViolations()
+	values, err := (context.ModuleContextRules{Root: root, Config: config}).ContextBoundaryViolations()
 	return mapMessageViolations("context", values, err)
 }
 
 func checkCQRS(root string, config Config) ([]Violation, error) {
-	rules := ModuleCQRSRules{Root: root, Config: config}
+	rules := cqrs.ModuleCQRSRules{Root: root, Config: config}
 	var violations []Violation
 	structs, err := rules.StructSuffixViolations()
 	if err != nil {
@@ -242,7 +262,7 @@ func checkCQRS(root string, config Config) ([]Violation, error) {
 }
 
 func checkDTO(root string, config Config) ([]Violation, error) {
-	rules := ModuleDTORules{Root: root, Config: config}
+	rules := dto.ModuleDTORules{Root: root, Config: config}
 	var violations []Violation
 	structs, err := rules.StructSuffixViolations()
 	if err != nil {
@@ -284,59 +304,53 @@ func checkDTO(root string, config Config) ([]Violation, error) {
 }
 
 func checkMapper(root string, config Config) ([]Violation, error) {
-	values, err := (ModuleMapperRules{Root: root, Config: config}).MapperBoundaryViolations()
+	values, err := (mapper.ModuleMapperRules{Root: root, Config: config}).MapperBoundaryViolations()
 	return mapMessageViolations("mapper", values, err)
 }
 
 func checkPublicAPI(root string, config Config) ([]Violation, error) {
-	values, err := (ModulePublicAPIRules{Root: root, Config: config}).PublicAPINameViolations()
+	values, err := (publicapi.ModulePublicAPIRules{Root: root, Config: config}).PublicAPINameViolations()
 	return mapMessageViolations("public-api", values, err)
 }
 
 func checkService(root string, config Config) ([]Violation, error) {
-	values, err := (ModuleServiceRules{Root: root, Config: config}).ServiceBoundaryViolations()
+	values, err := (service.ModuleServiceRules{Root: root, Config: config}).ServiceBoundaryViolations()
 	return mapMessageViolations("service", values, err)
 }
 
 func checkValidation(root string, config Config) ([]Violation, error) {
-	values, err := (ModuleValidationRules{Root: root, Config: config}).ValidationBoundaryViolations()
+	values, err := (validation.ModuleValidationRules{Root: root, Config: config}).ValidationBoundaryViolations()
 	return mapMessageViolations("validation", values, err)
 }
 
 func checkHandler(root string, config Config) ([]Violation, error) {
-	values, err := (ModuleHandlerRules{Root: root, Config: config}).HandlerBoundaryViolations()
+	values, err := (handler.ModuleHandlerRules{Root: root, Config: config}).HandlerBoundaryViolations()
 	return mapMessageViolations("handler", values, err)
 }
 
 func checkRepository(root string, config Config) ([]Violation, error) {
-	values, err := (ModuleRepositoryRules{Root: root, Config: config}).RepositoryBoundaryViolations()
+	values, err := (repository.ModuleRepositoryRules{Root: root, Config: config}).RepositoryBoundaryViolations()
 	return mapMessageViolations("repository", values, err)
 }
 
 func checkSchema(root string, config Config) ([]Violation, error) {
-	values, err := (ModuleSchemaRules{Root: root, Config: config}).SchemaBoundaryViolations()
+	values, err := (schema.ModuleSchemaRules{Root: root, Config: config}).SchemaBoundaryViolations()
 	return mapMessageViolations("schema", values, err)
 }
 
 func checkUtils(root string, config Config) ([]Violation, error) {
-	values, err := (ModuleUtilsRules{Root: root, Config: config}).UtilsBoundaryViolations()
+	values, err := (utils.ModuleUtilsRules{Root: root, Config: config}).UtilsBoundaryViolations()
 	return mapMessageViolations("utils", values, err)
 }
 
 func checkDatabaseTests(root string, config Config) ([]Violation, error) {
-	values, err := (DatabaseTestRules{Root: root, Config: config}).DatabaseTestBoundaryViolations()
+	values, err := (database.DatabaseTestRules{Root: root, Config: config}).DatabaseTestBoundaryViolations()
 	return mapMessageViolations("database-test", values, err)
 }
 
-type messageViolation interface {
-	GetFile() string
-	GetLine() int
-	GetMessage() string
-}
-
-func mapMessageViolations[T messageViolation](rule string, values []T, err error) ([]Violation, error) {
+func mapMessageViolations[T any](rule string, values []T, err error) ([]Violation, error) {
 	return mapViolations(rule, values, err, func(v T) Violation {
-		return Violation{Rule: rule, File: v.GetFile(), Line: v.GetLine(), Message: v.GetMessage()}
+		return messageViolation(rule, v)
 	})
 }
 
@@ -353,4 +367,14 @@ func mapViolations[T any](rule string, values []T, err error, convert func(T) Vi
 		violations = append(violations, violation)
 	}
 	return violations, nil
+}
+
+func messageViolation(rule string, value any) Violation {
+	fields := reflect.ValueOf(value)
+	return Violation{
+		Rule:    rule,
+		File:    fields.FieldByName("File").String(),
+		Line:    int(fields.FieldByName("Line").Int()),
+		Message: fields.FieldByName("Message").String(),
+	}
 }

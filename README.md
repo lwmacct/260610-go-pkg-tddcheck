@@ -36,15 +36,13 @@ func TestArchitecture(t *testing.T) {
 
 `Root` 可以是绝对路径，也可以是相对最近 `go.mod` 的路径。省略时默认检查 `internal`。
 
-需要细粒度控制时，可以直接使用单条规则类型：
+推荐入口是项目级检查。需要只运行某条检测时，可以直接使用 `pkg/tddcheck/rules/<rule>` 下的子包；共享的扫描和配置基础设施位于 `pkg/tddcheck/rulekit`。
 
 ```go
-func TestLayerDependencies(t *testing.T) {
-    tddcheck.ModuleLayerRules{Root: "internal"}.AssertLayerDependencies(t)
-}
+import "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/layer"
 
-func TestServiceBoundaries(t *testing.T) {
-    tddcheck.ModuleServiceRules{Root: "internal"}.AssertServiceBoundaries(t)
+func TestLayerDependencies(t *testing.T) {
+    layer.ModuleLayerRules{Root: "internal"}.AssertLayerDependencies(t)
 }
 ```
 
@@ -107,26 +105,6 @@ func TestArchitecture(t *testing.T) {
             HandlerForbiddenImports: []string{},
         },
     }.Assert(t)
-}
-```
-
-单条规则也接受同一份配置：
-
-```go
-func TestLayerDependencies(t *testing.T) {
-    tddcheck.ModuleLayerRules{
-        Root: "internal",
-        Config: tddcheck.Config{
-            LayerDirs: []string{"core", "api"},
-            LayerRules: []tddcheck.LayerDependencyRule{
-                {
-                    SourceLayer: "core",
-                    TargetLayer: "api",
-                    Message:     "core must not import api",
-                },
-            },
-        },
-    }.AssertLayerDependencies(t)
 }
 ```
 
