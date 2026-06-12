@@ -46,6 +46,42 @@ func TestLayerDependencies(t *testing.T) {
 }
 ```
 
+目标项目中更推荐把需要单独运行的检测整理成 `TestRules/<rule>` 子测试，例如 `internal/testutil/tddcheck/tddcheck_test.go`：
+
+```go
+package tddcheck_test
+
+import (
+    "testing"
+
+    "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/database"
+    "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/dto"
+    "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/layer"
+)
+
+func TestRules(t *testing.T) {
+    tests := []struct {
+        name   string
+        assert func(*testing.T)
+    }{
+        {"layer", func(t *testing.T) { layer.New("internal").Assert(t) }},
+        {"dto", func(t *testing.T) { dto.New("internal").Assert(t) }},
+        {"database-test", func(t *testing.T) { database.New(".").Assert(t) }},
+    }
+
+    for _, test := range tests {
+        t.Run(test.name, test.assert)
+    }
+}
+```
+
+这样可以运行全部检测，也可以只运行单条检测：
+
+```bash
+go test ./internal/testutil/tddcheck
+go test ./internal/testutil/tddcheck -run 'TestRules/layer'
+```
+
 ## 默认项目规则
 
 `ProjectRules` 默认运行以下检查：
@@ -54,7 +90,7 @@ func TestLayerDependencies(t *testing.T) {
 - `package-name`：包名与目录名一致。
 - `constants`：包级常量必须放在 `constants.go`。
 - `entity`：具体实体和值对象类型必须放在 `entity.go`。
-- `errors` 和 `error-prefix`：包级错误必须放在 `errors.go`，并使用 `Err*` 命名。
+- `error-boundary` 和 `error-prefix`：包级错误必须放在 `errors.go`，并使用 `Err*` 命名。
 - `context`：context helper 和 `context.WithValue` 使用必须放在 `context.go`。
 - `cqrs`：CQRS 结构体和接口使用明确后缀。
 - `dto`：DTO 结构体必须放在 `dto.go`，使用 `DTO` 或 `DTOs` 后缀，并且 `dto.go` 不能声明函数。
@@ -138,7 +174,7 @@ repos:
     hooks:
       - id: tddcheck
         name: tddcheck
-        entry: go test ./... -run TestArchitecture
+        entry: go test ./internal/testutil/tddcheck -run TestRules
         language: system
         pass_filenames: false
         types: [go]
