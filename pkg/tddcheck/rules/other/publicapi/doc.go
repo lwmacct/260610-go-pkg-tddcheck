@@ -1,7 +1,4 @@
-// Package publicapi checks public API names that use internal
-// responsibility prefixes.
+// Package publicapi 检查使用内部职责前缀的公共 API 名称。
 //
-// It reports exported functions whose names start with Validate or Normalize.
-// Those prefixes are reserved for internal validation and normalization helpers
-// in this architecture policy.
+// 它会报告名称以 Validate 或 Normalize 开头的导出函数。在此架构策略中，这些前缀保留给内部验证和规范化辅助函数使用。
 package publicapi

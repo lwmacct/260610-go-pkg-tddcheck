@@ -19,7 +19,7 @@ type Rules struct {
 	config rulekit.Config
 }
 
-// New creates rules for the supplied module root.
+// New 为给定模块根目录创建规则。
 func New(root string, options ...rulekit.Option) Rules {
 	values := rulekit.NewRuleOptions(root, options...)
 	return Rules{root: values.Root, config: values.Config}
@@ -32,7 +32,7 @@ type ErrorsBoundaryViolation struct {
 	Message string
 }
 
-// Assert fails the test when module errors boundaries are violated.
+// Assert 在模块 errors 边界被违反时让测试失败。
 func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
@@ -57,7 +57,7 @@ func (r Rules) Assert(t *testing.T) {
 	t.Fatalf("invalid errors boundaries:\n  - %s", strings.Join(lines, "\n  - "))
 }
 
-// ErrorsBoundaryViolations returns all module errors boundary violations.
+// ErrorsBoundaryViolations 返回所有模块 errors 边界违规。
 func (r Rules) ErrorsBoundaryViolations() ([]ErrorsBoundaryViolation, error) {
 	moduleDirs, err := rulekit.ModulePackageDirs(r.root, "Rules", r.config)
 	if err != nil {

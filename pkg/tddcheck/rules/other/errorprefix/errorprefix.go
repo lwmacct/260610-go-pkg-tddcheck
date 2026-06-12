@@ -18,7 +18,7 @@ type Rules struct {
 	config rulekit.Config
 }
 
-// New creates rules for the supplied module root.
+// New 为给定模块根目录创建规则。
 func New(root string, options ...rulekit.Option) Rules {
 	values := rulekit.NewRuleOptions(root, options...)
 	return Rules{root: values.Root, config: values.Config}
@@ -31,8 +31,7 @@ type ErrorPrefixViolation struct {
 	Name string
 }
 
-// Assert fails the test when a package-level error variable in
-// layered module errors.go does not start with Err.
+// Assert 在分层模块 errors.go 中存在未以 Err 开头的包级错误变量时让测试失败。
 func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
@@ -57,8 +56,7 @@ func (r Rules) Assert(t *testing.T) {
 	t.Fatalf("invalid error variable names:\n  - %s", strings.Join(lines, "\n  - "))
 }
 
-// ErrorPrefixViolations returns all package-level error variables in module
-// errors.go files that do not start with Err.
+// ErrorPrefixViolations 返回模块 errors.go 文件中所有未以 Err 开头的包级错误变量。
 func (r Rules) ErrorPrefixViolations() ([]ErrorPrefixViolation, error) {
 	matches, err := rulekit.ModuleFiles(r.root, "Rules", r.config, func(name string) bool { return name == "errors.go" })
 	if err != nil {

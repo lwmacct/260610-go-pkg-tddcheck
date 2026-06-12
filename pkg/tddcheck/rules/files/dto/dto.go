@@ -18,7 +18,7 @@ type Rules struct {
 	config rulekit.Config
 }
 
-// New creates rules for the supplied module root.
+// New 为给定模块根目录创建规则。
 func New(root string, options ...rulekit.Option) Rules {
 	values := rulekit.NewRuleOptions(root, options...)
 	return Rules{root: values.Root, config: values.Config}
@@ -45,7 +45,7 @@ type DTOFileViolation struct {
 	Name string
 }
 
-// Assert fails the test when any DTO naming or file ownership rule is violated.
+// Assert 在任意 DTO 命名或文件归属规则被违反时让测试失败。
 func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
@@ -94,8 +94,7 @@ func (r Rules) Assert(t *testing.T) {
 	t.Fatalf("invalid DTO boundaries:\n  - %s", strings.Join(lines, "\n  - "))
 }
 
-// StructSuffixViolations returns all struct names in module dto.go files that do
-// not end with DTO or DTOs.
+// StructSuffixViolations 返回模块 dto.go 文件中所有未以 DTO 或 DTOs 结尾的结构体名称。
 func (r Rules) StructSuffixViolations() ([]StructSuffixViolation, error) {
 	matches, err := rulekit.ModuleFiles(r.root, "Rules", r.config, func(name string) bool { return name == "dto.go" })
 	if err != nil {
@@ -114,7 +113,7 @@ func (r Rules) StructSuffixViolations() ([]StructSuffixViolation, error) {
 	return violations, nil
 }
 
-// FuncViolations returns all functions declared in module dto.go files.
+// FuncViolations 返回模块 dto.go 文件中声明的所有函数。
 func (r Rules) FuncViolations() ([]DTOFuncViolation, error) {
 	matches, err := rulekit.ModuleFiles(r.root, "Rules", r.config, func(name string) bool { return name == "dto.go" })
 	if err != nil {
@@ -133,7 +132,7 @@ func (r Rules) FuncViolations() ([]DTOFuncViolation, error) {
 	return violations, nil
 }
 
-// FileOwnershipViolations returns all DTO structs declared outside dto.go.
+// FileOwnershipViolations 返回所有在 dto.go 之外声明的 DTO 结构体。
 func (r Rules) FileOwnershipViolations() ([]DTOFileViolation, error) {
 	matches, err := rulekit.ModuleFiles(r.root, "Rules", r.config, func(name string) bool {
 		return strings.HasSuffix(name, ".go") && !strings.HasSuffix(name, "_test.go")

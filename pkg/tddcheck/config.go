@@ -20,7 +20,7 @@ type ValidationResolveConfig = rulekit.ValidationResolveConfig
 // DatabaseTestConfig configures the optional database test boundary rule.
 type DatabaseTestConfig = rulekit.DatabaseTestConfig
 
-// DefaultConfig returns the default architecture policy.
+// DefaultConfig 返回默认架构策略。
 func DefaultConfig() Config {
 	return rulekit.DefaultConfig()
 }

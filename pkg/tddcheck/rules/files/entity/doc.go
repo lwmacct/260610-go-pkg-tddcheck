@@ -1,6 +1,5 @@
-// Package entity checks ownership of concrete entity and value object types.
+// Package entity 检查具体实体和值对象类型的归属。
 //
-// It reports non-concrete or alias types in entity.go, package-level functions
-// in entity.go, entity methods whose receiver type is not declared in entity.go,
-// and entity receiver methods declared outside entity.go.
+// 它会报告 entity.go 中的非具体类型或别名类型、entity.go 中的包级函数、接收者类型未在
+// entity.go 中声明的实体方法，以及在 entity.go 之外声明的实体接收者方法。
 package entity

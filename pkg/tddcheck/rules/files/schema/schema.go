@@ -19,7 +19,7 @@ type Rules struct {
 	config rulekit.Config
 }
 
-// New creates rules for the supplied module root.
+// New 为给定模块根目录创建规则。
 func New(root string, options ...rulekit.Option) Rules {
 	values := rulekit.NewRuleOptions(root, options...)
 	return Rules{root: values.Root, config: values.Config}
@@ -32,7 +32,7 @@ type SchemaBoundaryViolation struct {
 	Message string
 }
 
-// Assert fails the test when module schema boundaries are violated.
+// Assert 在模块 schema 边界被违反时让测试失败。
 func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
@@ -57,7 +57,7 @@ func (r Rules) Assert(t *testing.T) {
 	t.Fatalf("invalid schema boundaries:\n  - %s", strings.Join(lines, "\n  - "))
 }
 
-// SchemaBoundaryViolations returns all module schema boundary violations.
+// SchemaBoundaryViolations 返回所有模块 schema 边界违规。
 func (r Rules) SchemaBoundaryViolations() ([]SchemaBoundaryViolation, error) {
 	moduleDirs, err := rulekit.ModulePackageDirs(r.root, "Rules", r.config)
 	if err != nil {

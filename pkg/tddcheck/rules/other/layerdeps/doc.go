@@ -1,7 +1,5 @@
-// Package layerdeps checks import direction between configured architecture
-// layers.
+// Package layerdeps 检查已配置架构层之间的导入方向。
 //
-// It reports imports that violate configured layer dependency rules. By default
-// it checks domain, usecase, adapter, runtime, and infra directories and
-// prevents inner or infrastructure layers from importing forbidden targets.
+// 它会报告违反已配置层依赖规则的导入。默认情况下，它检查 domain、usecase、adapter、
+// runtime 和 infra 目录，并阻止内层或基础设施层导入被禁止的目标。
 package layerdeps

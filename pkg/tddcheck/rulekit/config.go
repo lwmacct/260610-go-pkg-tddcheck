@@ -51,7 +51,7 @@ type DatabaseTestConfig struct {
 	ConfigPathMessage string
 }
 
-// DefaultConfig returns the architecture policy previously used by this package.
+// DefaultConfig 返回此包此前使用的架构策略。
 func DefaultConfig() Config {
 	return Config{
 		LayerDirs: []string{"domain", "usecase", "adapter", "runtime", "infra"},

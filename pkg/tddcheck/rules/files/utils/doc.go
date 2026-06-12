@@ -1,5 +1,4 @@
-// Package utils checks boundaries for private utility helpers.
+// Package utils 检查私有工具辅助函数的边界。
 //
-// It reports util* functions outside utils.go. It also reports declarations in
-// utils.go that are not private package-level util* functions.
+// 它会报告 utils.go 之外的 util* 函数，也会报告 utils.go 中不是私有包级 util* 函数的声明。
 package utils

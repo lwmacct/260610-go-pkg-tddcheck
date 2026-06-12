@@ -1,5 +1,4 @@
-// Package packagename checks package clauses against their directory names.
+// Package packagename 检查 package 子句是否匹配目录名称。
 //
-// It reports Go files whose package name is not the normalized directory name.
-// External test packages using the _test suffix are accepted.
+// 它会报告包名不等于规范化目录名的 Go 文件。允许使用 _test 后缀的外部测试包。
 package packagename

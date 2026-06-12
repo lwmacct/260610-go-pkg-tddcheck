@@ -56,7 +56,7 @@ type Result struct {
 	Duration   time.Duration
 }
 
-// Text renders the result in a stable, line-oriented format.
+// Text 以稳定的逐行格式渲染结果。
 func (r Result) Text() string {
 	if r.Err != nil {
 		return "tddcheck: " + r.Err.Error()
@@ -82,7 +82,7 @@ type ProjectRules struct {
 	IncludeDatabaseTests bool
 }
 
-// Assert fails the test when any project architecture boundary is violated.
+// Assert 在任意项目架构边界被违反时让测试失败。
 func (r ProjectRules) Assert(tb testing.TB) {
 	tb.Helper()
 
@@ -95,7 +95,7 @@ func (r ProjectRules) Assert(tb testing.TB) {
 	}
 }
 
-// Check runs the configured architecture rules and returns a normalized result.
+// Check 运行已配置的架构规则，并返回规范化结果。
 func (r ProjectRules) Check() Result {
 	start := time.Now()
 	root := r.Root

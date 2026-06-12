@@ -17,7 +17,7 @@ type Rules struct {
 	config rulekit.Config
 }
 
-// New creates rules for the supplied module root.
+// New 为给定模块根目录创建规则。
 func New(root string, options ...rulekit.Option) Rules {
 	values := rulekit.NewRuleOptions(root, options...)
 	return Rules{root: values.Root, config: values.Config}
@@ -38,7 +38,7 @@ type CQRSInterfaceNameViolation struct {
 	Message string
 }
 
-// Assert fails the test when any CQRS naming rule is violated.
+// Assert 在任意 CQRS 命名规则被违反时让测试失败。
 func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
@@ -76,8 +76,8 @@ func (r Rules) Assert(t *testing.T) {
 	t.Fatalf("invalid CQRS boundaries:\n  - %s", strings.Join(lines, "\n  - "))
 }
 
-// StructSuffixViolations returns all struct names in module cqrs.go files that
-// do not end with Query, Result, or Command.
+// StructSuffixViolations 返回模块 cqrs.go 文件中所有未以 Query、Result 或 Command
+// 结尾的结构体名称。
 func (r Rules) StructSuffixViolations() ([]CQRSSuffixViolation, error) {
 	matches, err := rulekit.ModuleFiles(r.root, "Rules", r.config, func(name string) bool { return name == "cqrs.go" })
 	if err != nil {
@@ -96,8 +96,7 @@ func (r Rules) StructSuffixViolations() ([]CQRSSuffixViolation, error) {
 	return violations, nil
 }
 
-// InterfaceNameViolations returns all interface names in module cqrs.go files
-// that do not express a use case contract or command/query dependency.
+// InterfaceNameViolations 返回模块 cqrs.go 文件中所有未表达用例契约或命令/查询依赖的接口名称。
 func (r Rules) InterfaceNameViolations() ([]CQRSInterfaceNameViolation, error) {
 	matches, err := rulekit.ModuleFiles(r.root, "Rules", r.config, func(name string) bool { return name == "cqrs.go" })
 	if err != nil {

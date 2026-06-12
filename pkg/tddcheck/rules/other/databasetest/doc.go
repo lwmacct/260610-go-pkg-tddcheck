@@ -1,6 +1,5 @@
-// Package databasetest checks optional database test helper boundaries.
+// Package databasetest 检查可选数据库测试辅助工具的边界。
 //
-// It scans _test.go files and reports project-specific SQLite setup patterns
-// that should use the shared database test helper. Allowed paths and detection
-// strings are configurable through rulekit.Config.
+// 它会扫描 _test.go 文件，并报告应改用共享数据库测试辅助工具的项目专属 SQLite 设置模式。
+// 可通过 rulekit.Config 配置允许的路径和检测字符串。
 package databasetest

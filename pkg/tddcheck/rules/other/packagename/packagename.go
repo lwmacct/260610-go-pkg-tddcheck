@@ -18,7 +18,7 @@ type Rules struct {
 	config rulekit.Config
 }
 
-// New creates rules for the supplied module root.
+// New 为给定模块根目录创建规则。
 func New(root string, options ...rulekit.Option) Rules {
 	values := rulekit.NewRuleOptions(root, options...)
 	return Rules{root: values.Root, config: values.Config}
@@ -31,7 +31,7 @@ type PackageNameViolation struct {
 	Message string
 }
 
-// Assert fails the test when package names do not match directory names.
+// Assert 在包名与目录名不匹配时让测试失败。
 func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
@@ -56,7 +56,7 @@ func (r Rules) Assert(t *testing.T) {
 	t.Fatalf("invalid package names:\n  - %s", strings.Join(lines, "\n  - "))
 }
 
-// PackageNameViolations returns all package name violations.
+// PackageNameViolations 返回所有包名违规。
 func (r Rules) PackageNameViolations() ([]PackageNameViolation, error) {
 	moduleDirs, err := rulekit.ModulePackageDirs(r.root, "Rules", r.config)
 	if err != nil {

@@ -1,18 +1,15 @@
-// Package tddcheck provides Go test helpers for enforcing project architecture
-// boundaries in layered Go modules.
+// Package tddcheck 提供 Go 测试辅助工具，用于在分层 Go 模块中强制检查项目架构边界。
 //
-// The package is intentionally mechanical: it scans Go source files with the
-// standard parser and reports naming, file ownership, and dependency direction
-// violations. It is designed to run from ordinary tests and CI.
+// 该包刻意保持机械化：它使用标准解析器扫描 Go 源文件，并报告命名、文件归属和依赖方向违规。
+// 它设计为可在普通测试和 CI 中运行。
 //
-// Typical usage:
+// 典型用法：
 //
 //	func TestArchitecture(t *testing.T) {
 //	    tddcheck.ProjectRules{Root: "internal"}.Assert(t)
 //	}
 //
-// Project-specific policy can be customized through Config. ProjectRules is the
-// recommended public entry point; individual rules are available under
-// pkg/tddcheck/rules/<files|other>/<rule> for focused checks. Rule packages
-// expose Meta values that describe their stable ID and kind.
+// 可通过 Config 定制项目专属策略。ProjectRules 是推荐的公共入口；单独规则位于
+// pkg/tddcheck/rules/<files|other>/<rule> 下，可用于聚焦检查。规则包会暴露 Meta
+// 值，用于描述其稳定 ID 和类型。
 package tddcheck

@@ -19,7 +19,7 @@ type Rules struct {
 	config rulekit.Config
 }
 
-// New creates rules for the supplied module root.
+// New 为给定模块根目录创建规则。
 func New(root string, options ...rulekit.Option) Rules {
 	values := rulekit.NewRuleOptions(root, options...)
 	return Rules{root: values.Root, config: values.Config}
@@ -32,7 +32,7 @@ type PublicAPINameViolation struct {
 	Message string
 }
 
-// Assert fails the test when public API names use reserved responsibility prefixes.
+// Assert 在公共 API 名称使用保留职责前缀时让测试失败。
 func (r Rules) Assert(t *testing.T) {
 	t.Helper()
 
@@ -57,7 +57,7 @@ func (r Rules) Assert(t *testing.T) {
 	t.Fatalf("invalid public API names:\n  - %s", strings.Join(lines, "\n  - "))
 }
 
-// PublicAPINameViolations returns all public API naming violations.
+// PublicAPINameViolations 返回所有公共 API 命名违规。
 func (r Rules) PublicAPINameViolations() ([]PublicAPINameViolation, error) {
 	moduleDirs, err := rulekit.ModulePackageDirs(r.root, "Rules", r.config)
 	if err != nil {
