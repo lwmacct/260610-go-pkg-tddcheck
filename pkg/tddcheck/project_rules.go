@@ -62,15 +62,15 @@ type ProjectRules struct {
 }
 
 // Assert fails the test when any project architecture boundary is violated.
-func (r ProjectRules) Assert(t testing.TB) {
-	t.Helper()
+func (r ProjectRules) Assert(tb testing.TB) {
+	tb.Helper()
 
 	result := r.Check()
 	if result.Err != nil {
-		t.Fatal(result.Err)
+		tb.Fatal(result.Err)
 	}
 	if !result.Passed {
-		t.Fatal(result.Text())
+		tb.Fatal(result.Text())
 	}
 }
 
@@ -265,7 +265,7 @@ func checkDTO(root string, config Config) ([]Violation, error) {
 			Rule:    "dto",
 			File:    violation.File,
 			Line:    violation.Line,
-			Message: fmt.Sprintf("dto.go must not declare func %s", violation.Name),
+			Message: "dto.go must not declare func " + violation.Name,
 		})
 	}
 	owned, err := rules.FileOwnershipViolations()

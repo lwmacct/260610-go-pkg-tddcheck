@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -111,12 +112,7 @@ func isErrorValueSpec(spec *ast.ValueSpec) bool {
 	if isErrorType(spec.Type) {
 		return true
 	}
-	for _, value := range spec.Values {
-		if isErrorConstructor(value) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(spec.Values, isErrorConstructor)
 }
 
 func isErrorType(expr ast.Expr) bool {

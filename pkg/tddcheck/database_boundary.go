@@ -117,9 +117,9 @@ func databaseTestBoundaryAllowed(config Config, path string) bool {
 }
 
 func lineOf(content string, needle string) int {
-	index := strings.Index(content, needle)
-	if index < 0 {
+	before, _, ok := strings.Cut(content, needle)
+	if !ok {
 		return 1
 	}
-	return strings.Count(content[:index], "\n") + 1
+	return strings.Count(before, "\n") + 1
 }

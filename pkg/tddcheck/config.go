@@ -1,5 +1,7 @@
 package tddcheck
 
+import "slices"
+
 // Config describes project-specific architecture policy knobs.
 //
 // A zero Config uses DefaultConfig. Slice fields distinguish nil from empty:
@@ -197,10 +199,5 @@ func (c Config) withDefaults() Config {
 }
 
 func stringIn(value string, values []string) bool {
-	for _, candidate := range values {
-		if value == candidate {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(values, value)
 }

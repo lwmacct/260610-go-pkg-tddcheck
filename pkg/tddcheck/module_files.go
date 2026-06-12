@@ -9,10 +9,6 @@ import (
 	"strings"
 )
 
-func moduleFiles(root string, ruleName string, match func(string) bool) ([]string, error) {
-	return moduleFilesWithConfig(root, ruleName, Config{}, match)
-}
-
 func moduleFilesWithConfig(root string, ruleName string, config Config, match func(string) bool) ([]string, error) {
 	roots, err := moduleScanRootsWithConfig(root, ruleName, config)
 	if err != nil {
@@ -43,10 +39,6 @@ func moduleFilesWithConfig(root string, ruleName string, config Config, match fu
 	}
 	slices.Sort(matches)
 	return matches, nil
-}
-
-func modulePackageDirs(root string, ruleName string) ([]string, error) {
-	return modulePackageDirsWithConfig(root, ruleName, Config{})
 }
 
 func modulePackageDirsWithConfig(root string, ruleName string, config Config) ([]string, error) {
@@ -86,10 +78,6 @@ func modulePackageDirsWithConfig(root string, ruleName string, config Config) ([
 	return dirs, nil
 }
 
-func moduleScanRoots(root string, ruleName string) ([]string, error) {
-	return moduleScanRootsWithConfig(root, ruleName, Config{})
-}
-
 func moduleScanRootsWithConfig(root string, ruleName string, config Config) ([]string, error) {
 	resolved, err := resolveRuleRoot(root, ruleName)
 	if err != nil {
@@ -124,10 +112,6 @@ func resolveRuleRoot(root string, ruleName string) (string, error) {
 		return "", err
 	}
 	return filepath.Join(projectRoot, root), nil
-}
-
-func shouldSkipModuleScanDir(name string) bool {
-	return shouldSkipModuleScanDirWithConfig(name, Config{})
 }
 
 func shouldSkipModuleScanDirWithConfig(name string, config Config) bool {

@@ -1,8 +1,8 @@
 package main
 
 import (
+	"errors"
 	"flag"
-	"fmt"
 	"os"
 
 	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck"
@@ -28,13 +28,13 @@ func run() int {
 	flags.BoolVar(&showVersion, "version", false, "print version")
 
 	if err := flags.Parse(os.Args[1:]); err != nil {
-		if err == flag.ErrHelp {
+		if errors.Is(err, flag.ErrHelp) {
 			return 0
 		}
 		return 2
 	}
 	if showVersion {
-		fmt.Println(version)
+		_, _ = os.Stdout.WriteString(version + "\n")
 		return 0
 	}
 
@@ -43,11 +43,11 @@ func run() int {
 		IncludeDatabaseTests: includeDatabaseTests,
 	}).Check()
 	if result.Err != nil {
-		fmt.Fprintln(os.Stderr, "tddcheck:", result.Err)
+		_, _ = os.Stderr.WriteString("tddcheck: " + result.Err.Error() + "\n")
 		return 2
 	}
 
-	fmt.Println(result.Text())
+	_, _ = os.Stdout.WriteString(result.Text() + "\n")
 	if !result.Passed {
 		return 1
 	}
