@@ -36,10 +36,12 @@ func TestArchitecture(t *testing.T) {
 
 `Root` 可以是绝对路径，也可以是相对最近 `go.mod` 的路径。省略时默认检查 `internal`。
 
-推荐入口是项目级检查。需要只运行某条检测时，可以直接使用 `pkg/tddcheck/rules/<category>/<rule>` 下的子包；共享的扫描和配置基础设施位于 `pkg/tddcheck/rulekit`。
+推荐入口是项目级检查。需要只运行某条检测时，可以直接使用 `pkg/tddcheck/rules/<files|other>/<rule>` 下的子包；共享的扫描和配置基础设施位于 `pkg/tddcheck/rulekit`。
+
+规则包按目录分为 `rules/files` 和 `rules/other`。目录用于浏览，规则自身的机器可读分类由每个规则包的 `Meta.Kind` 提供，例如 `file`、`name`、`dependency` 和 `test`。
 
 ```go
-import "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/dependency/layer"
+import "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/other/layer"
 
 func TestLayerDependencies(t *testing.T) {
     layer.New("internal").Assert(t)
@@ -56,9 +58,9 @@ package tddcheck_test
 import (
     "testing"
 
-    "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/test/database"
-    "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/file/dto"
-    "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/dependency/layer"
+    "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/other/databasetest"
+    "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/files/dto"
+    "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/other/layer"
 )
 
 type assertRule interface {
@@ -72,7 +74,7 @@ func TestRules(t *testing.T) {
     }{
         {"dependency-layer", layer.New("internal")},
         {"file-dto", dto.New("internal")},
-        {"test-database", database.New(".")},
+        {"test-database", databasetest.New(".")},
     }
 
     for _, test := range tests {
