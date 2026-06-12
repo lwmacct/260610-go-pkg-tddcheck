@@ -7,7 +7,7 @@ import (
 	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/testkit"
 )
 
-func TestDatabaseTestRulesUsesConfiguredNeedlesAndAllowedPaths(t *testing.T) {
+func TestRulesUsesConfiguredNeedlesAndAllowedPaths(t *testing.T) {
 	root := t.TempDir()
 	testkit.WriteFile(t, root, "db/open_test.go", `package db
 
@@ -26,7 +26,7 @@ func TestOpen(t T) {
 		},
 	}
 
-	violations, err := (DatabaseTestRules{Root: root, Config: config}).DatabaseTestBoundaryViolations()
+	violations, err := New(root, rulekit.WithConfig(config)).DatabaseTestBoundaryViolations()
 	if err != nil {
 		t.Fatal(err)
 	}

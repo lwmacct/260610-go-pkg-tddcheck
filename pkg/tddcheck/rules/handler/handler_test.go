@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestModuleHandlerRulesBoundaryViolations(t *testing.T) {
+func TestRulesBoundaryViolations(t *testing.T) {
 	root := t.TempDir()
 
 	testkit.WriteFile(t, root, "good/handler.go", `package good
@@ -79,7 +79,7 @@ func seed(db bun.IDB) {
 }
 `)
 
-	violations, err := (ModuleHandlerRules{Root: root}).HandlerBoundaryViolations()
+	violations, err := New(root).HandlerBoundaryViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,8 +115,8 @@ func seed(db bun.IDB) {
 	}
 }
 
-func TestModuleHandlerRulesRequiresRoot(t *testing.T) {
-	_, err := (ModuleHandlerRules{}).HandlerBoundaryViolations()
+func TestRulesRequiresRoot(t *testing.T) {
+	_, err := New("").HandlerBoundaryViolations()
 	if err == nil {
 		t.Fatal("expected error for empty root")
 	}

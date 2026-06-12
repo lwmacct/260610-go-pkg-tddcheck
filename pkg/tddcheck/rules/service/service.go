@@ -12,11 +12,16 @@ import (
 	"testing"
 )
 
-// ModuleServiceRules declares mechanical boundary rules for module Service files.
-type ModuleServiceRules struct {
-	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root   string
-	Config rulekit.Config
+// Rules declares mechanical boundary rules for module Service files.
+type Rules struct {
+	root   string
+	config rulekit.Config
+}
+
+// New creates rules for the supplied module root.
+func New(root string, options ...rulekit.Option) Rules {
+	values := rulekit.NewRuleOptions(root, options...)
+	return Rules{root: values.Root, config: values.Config}
 }
 
 // ServiceBoundaryViolation describes one service boundary violation.
@@ -27,7 +32,7 @@ type ServiceBoundaryViolation struct {
 }
 
 // AssertServiceBoundaries fails the test when module service boundaries are violated.
-func (r ModuleServiceRules) AssertServiceBoundaries(t *testing.T) {
+func (r Rules) AssertServiceBoundaries(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.ServiceBoundaryViolations()
@@ -52,8 +57,8 @@ func (r ModuleServiceRules) AssertServiceBoundaries(t *testing.T) {
 }
 
 // ServiceBoundaryViolations returns all module service boundary violations.
-func (r ModuleServiceRules) ServiceBoundaryViolations() ([]ServiceBoundaryViolation, error) {
-	moduleDirs, err := rulekit.ModulePackageDirs(r.Root, "ModuleServiceRules", r.Config)
+func (r Rules) ServiceBoundaryViolations() ([]ServiceBoundaryViolation, error) {
+	moduleDirs, err := rulekit.ModulePackageDirs(r.root, "Rules", r.config)
 	if err != nil {
 		return nil, err
 	}

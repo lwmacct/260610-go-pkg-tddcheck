@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestModuleRepositoryRulesBoundaryViolations(t *testing.T) {
+func TestRulesBoundaryViolations(t *testing.T) {
 	root := t.TempDir()
 
 	testkit.WriteFile(t, root, "good/repository.go", `package good
@@ -57,7 +57,7 @@ func newRepository() {}
 func (r *Repository) Outside() {}
 `)
 
-	violations, err := (ModuleRepositoryRules{Root: root}).RepositoryBoundaryViolations()
+	violations, err := New(root).RepositoryBoundaryViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,8 +92,8 @@ func (r *Repository) Outside() {}
 	}
 }
 
-func TestModuleRepositoryRulesRequiresRoot(t *testing.T) {
-	_, err := (ModuleRepositoryRules{}).RepositoryBoundaryViolations()
+func TestRulesRequiresRoot(t *testing.T) {
+	_, err := New("").RepositoryBoundaryViolations()
 	if err == nil {
 		t.Fatal("expected error for empty root")
 	}

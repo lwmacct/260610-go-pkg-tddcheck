@@ -73,7 +73,7 @@ func (s *Service) Run() {}
 func (s *Service) HandleTest() {}
 `)
 
-	violations, err := (ModuleServiceRules{Root: root}).ServiceBoundaryViolations()
+	violations, err := New(root).ServiceBoundaryViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -97,8 +97,8 @@ func (s *Service) HandleTest() {}
 	}
 }
 
-func TestModuleServiceRulesRequiresRoot(t *testing.T) {
-	_, err := (ModuleServiceRules{}).ServiceBoundaryViolations()
+func TestRulesRequiresRoot(t *testing.T) {
+	_, err := New("").ServiceBoundaryViolations()
 	if err == nil {
 		t.Fatal("expected error for empty root")
 	}

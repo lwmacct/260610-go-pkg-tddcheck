@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestDatabaseTestRulesBoundaryViolations(t *testing.T) {
+func TestRulesBoundaryViolations(t *testing.T) {
 	root := t.TempDir()
 
 	testkit.WriteFile(t, root, "good/service_test.go", `package good
@@ -28,7 +28,7 @@ func TestSQLitePath(t T) {
 }
 `)
 
-	violations, err := (DatabaseTestRules{Root: root}).DatabaseTestBoundaryViolations()
+	violations, err := New(root).DatabaseTestBoundaryViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,8 +45,8 @@ func TestSQLitePath(t T) {
 	}
 }
 
-func TestDatabaseTestRulesRequiresRoot(t *testing.T) {
-	_, err := (DatabaseTestRules{}).DatabaseTestBoundaryViolations()
+func TestRulesRequiresRoot(t *testing.T) {
+	_, err := New("").DatabaseTestBoundaryViolations()
 	if err == nil {
 		t.Fatal("expected error for empty root")
 	}

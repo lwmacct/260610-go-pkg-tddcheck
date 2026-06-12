@@ -12,11 +12,16 @@ import (
 	"testing"
 )
 
-// ModuleEntityRules declares mechanical boundary rules for module entity.go files.
-type ModuleEntityRules struct {
-	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root   string
-	Config rulekit.Config
+// Rules declares mechanical boundary rules for module entity.go files.
+type Rules struct {
+	root   string
+	config rulekit.Config
+}
+
+// New creates rules for the supplied module root.
+func New(root string, options ...rulekit.Option) Rules {
+	values := rulekit.NewRuleOptions(root, options...)
+	return Rules{root: values.Root, config: values.Config}
 }
 
 // EntityBoundaryViolation describes one entity boundary violation.
@@ -27,7 +32,7 @@ type EntityBoundaryViolation struct {
 }
 
 // AssertEntityBoundaries fails the test when module entity boundaries are violated.
-func (r ModuleEntityRules) AssertEntityBoundaries(t *testing.T) {
+func (r Rules) AssertEntityBoundaries(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.EntityBoundaryViolations()
@@ -52,8 +57,8 @@ func (r ModuleEntityRules) AssertEntityBoundaries(t *testing.T) {
 }
 
 // EntityBoundaryViolations returns all module entity boundary violations.
-func (r ModuleEntityRules) EntityBoundaryViolations() ([]EntityBoundaryViolation, error) {
-	moduleDirs, err := rulekit.ModulePackageDirs(r.Root, "ModuleEntityRules", r.Config)
+func (r Rules) EntityBoundaryViolations() ([]EntityBoundaryViolation, error) {
+	moduleDirs, err := rulekit.ModulePackageDirs(r.root, "Rules", r.config)
 	if err != nil {
 		return nil, err
 	}

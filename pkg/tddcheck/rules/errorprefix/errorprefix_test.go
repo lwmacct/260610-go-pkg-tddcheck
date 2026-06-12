@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestModuleErrorRulesErrorPrefixViolations(t *testing.T) {
+func TestRulesErrorPrefixViolations(t *testing.T) {
 	root := t.TempDir()
 
 	testkit.WriteFile(t, root, "user/errors.go", `package user
@@ -39,7 +39,7 @@ import "errors"
 var ignored = errors.New("ignored")
 `)
 
-	violations, err := (ModuleErrorRules{Root: root}).ErrorPrefixViolations()
+	violations, err := New(root).ErrorPrefixViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,8 +51,8 @@ var ignored = errors.New("ignored")
 	}
 }
 
-func TestModuleErrorRulesRequiresRoot(t *testing.T) {
-	_, err := (ModuleErrorRules{}).ErrorPrefixViolations()
+func TestRulesRequiresRoot(t *testing.T) {
+	_, err := New("").ErrorPrefixViolations()
 	if err == nil {
 		t.Fatal("expected error for empty root")
 	}

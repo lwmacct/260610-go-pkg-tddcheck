@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestModuleErrorRulesBoundaryViolations(t *testing.T) {
+func TestRulesBoundaryViolations(t *testing.T) {
 	root := t.TempDir()
 
 	testkit.WriteFile(t, root, "good/errors.go", `package good
@@ -44,7 +44,7 @@ import "errors"
 var ErrService = errors.New("service")
 `)
 
-	violations, err := (ModuleErrorRules{Root: root}).ErrorsBoundaryViolations()
+	violations, err := New(root).ErrorsBoundaryViolations()
 	if err != nil {
 		t.Fatal(err)
 	}

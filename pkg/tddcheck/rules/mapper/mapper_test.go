@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestModuleMapperRulesBoundaryViolations(t *testing.T) {
+func TestRulesBoundaryViolations(t *testing.T) {
 	root := t.TempDir()
 
 	testkit.WriteFile(t, root, "good/mapper.go", `package good
@@ -41,7 +41,7 @@ func requestFromContext(ctx context.Context) (UserDTO, bool) { return UserDTO{},
 func ToIgnoredDTO(user User) UserDTO { return UserDTO{} }
 `)
 
-	violations, err := (ModuleMapperRules{Root: root}).MapperBoundaryViolations()
+	violations, err := New(root).MapperBoundaryViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,8 +66,8 @@ func ToIgnoredDTO(user User) UserDTO { return UserDTO{} }
 	}
 }
 
-func TestModuleMapperRulesRequiresRoot(t *testing.T) {
-	_, err := (ModuleMapperRules{}).MapperBoundaryViolations()
+func TestRulesRequiresRoot(t *testing.T) {
+	_, err := New("").MapperBoundaryViolations()
 	if err == nil {
 		t.Fatal("expected error for empty root")
 	}

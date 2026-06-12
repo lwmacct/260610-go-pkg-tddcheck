@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestModuleContextRulesBoundaryViolations(t *testing.T) {
+func TestRulesBoundaryViolations(t *testing.T) {
 	root := t.TempDir()
 
 	testkit.WriteFile(t, root, "good/context.go", `package good
@@ -83,7 +83,7 @@ func ContextWithTest(ctx context.Context, user string) context.Context {
 }
 `)
 
-	violations, err := (ModuleContextRules{Root: root}).ContextBoundaryViolations()
+	violations, err := New(root).ContextBoundaryViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,8 +102,8 @@ func ContextWithTest(ctx context.Context, user string) context.Context {
 	}
 }
 
-func TestModuleContextRulesRequiresRoot(t *testing.T) {
-	_, err := (ModuleContextRules{}).ContextBoundaryViolations()
+func TestRulesRequiresRoot(t *testing.T) {
+	_, err := New("").ContextBoundaryViolations()
 	if err == nil {
 		t.Fatal("expected error for empty root")
 	}

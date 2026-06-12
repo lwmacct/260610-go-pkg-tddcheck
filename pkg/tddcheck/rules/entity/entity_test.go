@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestModuleEntityRulesBoundaryViolations(t *testing.T) {
+func TestRulesBoundaryViolations(t *testing.T) {
 	root := t.TempDir()
 
 	testkit.WriteFile(t, root, "good/entity.go", `package good
@@ -40,7 +40,7 @@ func (user User) Active() bool {
 func (user User) Disable() {}
 `)
 
-	violations, err := (ModuleEntityRules{Root: root}).EntityBoundaryViolations()
+	violations, err := New(root).EntityBoundaryViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,8 +59,8 @@ func (user User) Disable() {}
 	}
 }
 
-func TestModuleEntityRulesRequiresRoot(t *testing.T) {
-	_, err := (ModuleEntityRules{}).EntityBoundaryViolations()
+func TestRulesRequiresRoot(t *testing.T) {
+	_, err := New("").EntityBoundaryViolations()
 	if err == nil {
 		t.Fatal("expected error for empty root")
 	}

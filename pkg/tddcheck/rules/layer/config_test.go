@@ -7,7 +7,7 @@ import (
 	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/testkit"
 )
 
-func TestModuleLayerRulesUsesConfiguredLayers(t *testing.T) {
+func TestRulesUsesConfiguredLayers(t *testing.T) {
 	root := t.TempDir()
 	testkit.WriteFile(t, root, "core/user/service.go", `package user
 
@@ -22,7 +22,7 @@ import "github.com/lwmacct/260610-go-pkg-tddcheck/internal/api/user"
 			Message:     "core must not import api",
 		}},
 	}
-	violations, err := (ModuleLayerRules{Root: root, Config: config}).LayerDependencyViolations()
+	violations, err := New(root, rulekit.WithConfig(config)).LayerDependencyViolations()
 	if err != nil {
 		t.Fatal(err)
 	}

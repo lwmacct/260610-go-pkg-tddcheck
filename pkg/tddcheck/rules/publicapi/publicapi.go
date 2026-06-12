@@ -12,11 +12,16 @@ import (
 	"testing"
 )
 
-// ModulePublicAPIRules declares mechanical public API naming rules.
-type ModulePublicAPIRules struct {
-	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root   string
-	Config rulekit.Config
+// Rules declares mechanical public API naming rules.
+type Rules struct {
+	root   string
+	config rulekit.Config
+}
+
+// New creates rules for the supplied module root.
+func New(root string, options ...rulekit.Option) Rules {
+	values := rulekit.NewRuleOptions(root, options...)
+	return Rules{root: values.Root, config: values.Config}
 }
 
 // PublicAPINameViolation describes one public API naming violation.
@@ -27,7 +32,7 @@ type PublicAPINameViolation struct {
 }
 
 // AssertPublicAPINames fails the test when public API names use reserved responsibility prefixes.
-func (r ModulePublicAPIRules) AssertPublicAPINames(t *testing.T) {
+func (r Rules) AssertPublicAPINames(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.PublicAPINameViolations()
@@ -52,8 +57,8 @@ func (r ModulePublicAPIRules) AssertPublicAPINames(t *testing.T) {
 }
 
 // PublicAPINameViolations returns all public API naming violations.
-func (r ModulePublicAPIRules) PublicAPINameViolations() ([]PublicAPINameViolation, error) {
-	moduleDirs, err := rulekit.ModulePackageDirs(r.Root, "ModulePublicAPIRules", r.Config)
+func (r Rules) PublicAPINameViolations() ([]PublicAPINameViolation, error) {
+	moduleDirs, err := rulekit.ModulePackageDirs(r.root, "Rules", r.config)
 	if err != nil {
 		return nil, err
 	}

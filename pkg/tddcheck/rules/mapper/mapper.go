@@ -12,11 +12,16 @@ import (
 	"testing"
 )
 
-// ModuleMapperRules declares boundary rules for module mapper.go files.
-type ModuleMapperRules struct {
-	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root   string
-	Config rulekit.Config
+// Rules declares boundary rules for module mapper.go files.
+type Rules struct {
+	root   string
+	config rulekit.Config
+}
+
+// New creates rules for the supplied module root.
+func New(root string, options ...rulekit.Option) Rules {
+	values := rulekit.NewRuleOptions(root, options...)
+	return Rules{root: values.Root, config: values.Config}
 }
 
 // MapperBoundaryViolation describes one mapper boundary violation.
@@ -27,7 +32,7 @@ type MapperBoundaryViolation struct {
 }
 
 // AssertMapperBoundary fails the test when module mapper boundaries are violated.
-func (r ModuleMapperRules) AssertMapperBoundary(t *testing.T) {
+func (r Rules) AssertMapperBoundary(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.MapperBoundaryViolations()
@@ -52,8 +57,8 @@ func (r ModuleMapperRules) AssertMapperBoundary(t *testing.T) {
 }
 
 // MapperBoundaryViolations returns all module mapper boundary violations.
-func (r ModuleMapperRules) MapperBoundaryViolations() ([]MapperBoundaryViolation, error) {
-	moduleDirs, err := rulekit.ModulePackageDirs(r.Root, "ModuleMapperRules", r.Config)
+func (r Rules) MapperBoundaryViolations() ([]MapperBoundaryViolation, error) {
+	moduleDirs, err := rulekit.ModulePackageDirs(r.root, "Rules", r.config)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +74,7 @@ func (r ModuleMapperRules) MapperBoundaryViolations() ([]MapperBoundaryViolation
 			if strings.HasSuffix(file, "_test.go") {
 				continue
 			}
-			fileViolations, err := mapperBoundaryViolationsInFile(r.Config, file)
+			fileViolations, err := mapperBoundaryViolationsInFile(r.config, file)
 			if err != nil {
 				return nil, err
 			}

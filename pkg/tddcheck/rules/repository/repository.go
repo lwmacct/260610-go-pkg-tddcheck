@@ -13,11 +13,16 @@ import (
 	"testing"
 )
 
-// ModuleRepositoryRules declares boundary rules for module repository files.
-type ModuleRepositoryRules struct {
-	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root   string
-	Config rulekit.Config
+// Rules declares boundary rules for module repository files.
+type Rules struct {
+	root   string
+	config rulekit.Config
+}
+
+// New creates rules for the supplied module root.
+func New(root string, options ...rulekit.Option) Rules {
+	values := rulekit.NewRuleOptions(root, options...)
+	return Rules{root: values.Root, config: values.Config}
 }
 
 // RepositoryBoundaryViolation describes one repository boundary violation.
@@ -28,7 +33,7 @@ type RepositoryBoundaryViolation struct {
 }
 
 // AssertRepositoryBoundary fails the test when module repository boundaries are violated.
-func (r ModuleRepositoryRules) AssertRepositoryBoundary(t *testing.T) {
+func (r Rules) AssertRepositoryBoundary(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.RepositoryBoundaryViolations()
@@ -53,8 +58,8 @@ func (r ModuleRepositoryRules) AssertRepositoryBoundary(t *testing.T) {
 }
 
 // RepositoryBoundaryViolations returns all module repository boundary violations.
-func (r ModuleRepositoryRules) RepositoryBoundaryViolations() ([]RepositoryBoundaryViolation, error) {
-	moduleDirs, err := rulekit.ModulePackageDirs(r.Root, "ModuleRepositoryRules", r.Config)
+func (r Rules) RepositoryBoundaryViolations() ([]RepositoryBoundaryViolation, error) {
+	moduleDirs, err := rulekit.ModulePackageDirs(r.root, "Rules", r.config)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +75,7 @@ func (r ModuleRepositoryRules) RepositoryBoundaryViolations() ([]RepositoryBound
 			if strings.HasSuffix(file, "_test.go") {
 				continue
 			}
-			fileViolations, err := repositoryBoundaryViolationsInFile(r.Config, file)
+			fileViolations, err := repositoryBoundaryViolationsInFile(r.config, file)
 			if err != nil {
 				return nil, err
 			}

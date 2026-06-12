@@ -11,11 +11,16 @@ import (
 	"testing"
 )
 
-// ModulePackageNameRules declares mechanical package naming rules.
-type ModulePackageNameRules struct {
-	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root   string
-	Config rulekit.Config
+// Rules declares mechanical package naming rules.
+type Rules struct {
+	root   string
+	config rulekit.Config
+}
+
+// New creates rules for the supplied module root.
+func New(root string, options ...rulekit.Option) Rules {
+	values := rulekit.NewRuleOptions(root, options...)
+	return Rules{root: values.Root, config: values.Config}
 }
 
 // PackageNameViolation describes one package clause that does not match its directory.
@@ -26,7 +31,7 @@ type PackageNameViolation struct {
 }
 
 // AssertPackageNames fails the test when package names do not match directory names.
-func (r ModulePackageNameRules) AssertPackageNames(t *testing.T) {
+func (r Rules) AssertPackageNames(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.PackageNameViolations()
@@ -51,8 +56,8 @@ func (r ModulePackageNameRules) AssertPackageNames(t *testing.T) {
 }
 
 // PackageNameViolations returns all package name violations.
-func (r ModulePackageNameRules) PackageNameViolations() ([]PackageNameViolation, error) {
-	moduleDirs, err := rulekit.ModulePackageDirs(r.Root, "ModulePackageNameRules", r.Config)
+func (r Rules) PackageNameViolations() ([]PackageNameViolation, error) {
+	moduleDirs, err := rulekit.ModulePackageDirs(r.root, "Rules", r.config)
 	if err != nil {
 		return nil, err
 	}

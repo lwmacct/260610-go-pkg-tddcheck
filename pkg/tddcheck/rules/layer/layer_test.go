@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestModuleLayerRulesViolations(t *testing.T) {
+func TestRulesViolations(t *testing.T) {
 	root := t.TempDir()
 	importPrefix, err := rulekit.ModulePath()
 	if err != nil {
@@ -36,7 +36,7 @@ import "`+importPrefix+`/internal/adapter/httpauth"
 import "`+importPrefix+`/internal/usecase/nodequery"
 `)
 
-	violations, err := (ModuleLayerRules{Root: root}).LayerDependencyViolations()
+	violations, err := New(root).LayerDependencyViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,8 +54,8 @@ import "`+importPrefix+`/internal/usecase/nodequery"
 	}
 }
 
-func TestModuleLayerRulesRequiresRoot(t *testing.T) {
-	_, err := (ModuleLayerRules{}).LayerDependencyViolations()
+func TestRulesRequiresRoot(t *testing.T) {
+	_, err := New("").LayerDependencyViolations()
 	if err == nil {
 		t.Fatal("expected error for empty root")
 	}

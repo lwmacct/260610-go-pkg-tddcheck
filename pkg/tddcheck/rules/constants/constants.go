@@ -12,11 +12,16 @@ import (
 	"testing"
 )
 
-// ModuleConstantsRules declares mechanical boundary rules for module constants.go files.
-type ModuleConstantsRules struct {
-	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root   string
-	Config rulekit.Config
+// Rules declares mechanical boundary rules for module constants.go files.
+type Rules struct {
+	root   string
+	config rulekit.Config
+}
+
+// New creates rules for the supplied module root.
+func New(root string, options ...rulekit.Option) Rules {
+	values := rulekit.NewRuleOptions(root, options...)
+	return Rules{root: values.Root, config: values.Config}
 }
 
 // ConstantsBoundaryViolation describes one constants boundary violation.
@@ -27,7 +32,7 @@ type ConstantsBoundaryViolation struct {
 }
 
 // AssertConstantsBoundaries fails the test when module constants boundaries are violated.
-func (r ModuleConstantsRules) AssertConstantsBoundaries(t *testing.T) {
+func (r Rules) AssertConstantsBoundaries(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.ConstantsBoundaryViolations()
@@ -52,8 +57,8 @@ func (r ModuleConstantsRules) AssertConstantsBoundaries(t *testing.T) {
 }
 
 // ConstantsBoundaryViolations returns all module constants boundary violations.
-func (r ModuleConstantsRules) ConstantsBoundaryViolations() ([]ConstantsBoundaryViolation, error) {
-	moduleDirs, err := rulekit.ModulePackageDirs(r.Root, "ModuleConstantsRules", r.Config)
+func (r Rules) ConstantsBoundaryViolations() ([]ConstantsBoundaryViolation, error) {
+	moduleDirs, err := rulekit.ModulePackageDirs(r.root, "Rules", r.config)
 	if err != nil {
 		return nil, err
 	}

@@ -11,11 +11,16 @@ import (
 	"testing"
 )
 
-// ModuleLayerRules declares import direction rules for layered internal packages.
-type ModuleLayerRules struct {
-	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root   string
-	Config rulekit.Config
+// Rules declares import direction rules for layered internal packages.
+type Rules struct {
+	root   string
+	config rulekit.Config
+}
+
+// New creates rules for the supplied module root.
+func New(root string, options ...rulekit.Option) Rules {
+	values := rulekit.NewRuleOptions(root, options...)
+	return Rules{root: values.Root, config: values.Config}
 }
 
 type LayerDependencyViolation struct {
@@ -25,7 +30,7 @@ type LayerDependencyViolation struct {
 	Message    string
 }
 
-func (r ModuleLayerRules) AssertLayerDependencies(t *testing.T) {
+func (r Rules) AssertLayerDependencies(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.LayerDependencyViolations()
@@ -49,9 +54,9 @@ func (r ModuleLayerRules) AssertLayerDependencies(t *testing.T) {
 	t.Fatalf("invalid layer dependencies:\n  - %s", strings.Join(lines, "\n  - "))
 }
 
-func (r ModuleLayerRules) LayerDependencyViolations() ([]LayerDependencyViolation, error) {
-	config := r.Config.WithDefaults()
-	root, err := rulekit.ResolveRuleRoot(r.Root, "ModuleLayerRules")
+func (r Rules) LayerDependencyViolations() ([]LayerDependencyViolation, error) {
+	config := r.config.WithDefaults()
+	root, err := rulekit.ResolveRuleRoot(r.root, "Rules")
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +66,7 @@ func (r ModuleLayerRules) LayerDependencyViolations() ([]LayerDependencyViolatio
 	}
 	internalPrefix := modulePath + "/internal/"
 
-	files, err := rulekit.ModuleFiles(r.Root, "ModuleLayerRules", config, func(name string) bool {
+	files, err := rulekit.ModuleFiles(r.root, "Rules", config, func(name string) bool {
 		return strings.HasSuffix(name, ".go")
 	})
 	if err != nil {

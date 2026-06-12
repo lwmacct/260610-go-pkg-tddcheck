@@ -42,7 +42,7 @@ func TestArchitecture(t *testing.T) {
 import "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/layer"
 
 func TestLayerDependencies(t *testing.T) {
-    layer.ModuleLayerRules{Root: "internal"}.AssertLayerDependencies(t)
+    layer.New("internal").AssertLayerDependencies(t)
 }
 ```
 

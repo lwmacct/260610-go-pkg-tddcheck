@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestModuleValidationRulesBoundaryViolations(t *testing.T) {
+func TestRulesBoundaryViolations(t *testing.T) {
 	root := t.TempDir()
 
 	testkit.WriteFile(t, root, "good/validation.go", `package good
@@ -70,7 +70,7 @@ func validateTestInput() error {
 }
 `)
 
-	violations, err := (ModuleValidationRules{Root: root}).ValidationBoundaryViolations()
+	violations, err := New(root).ValidationBoundaryViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -94,8 +94,8 @@ func validateTestInput() error {
 	}
 }
 
-func TestModuleValidationRulesRequiresRoot(t *testing.T) {
-	_, err := (ModuleValidationRules{}).ValidationBoundaryViolations()
+func TestRulesRequiresRoot(t *testing.T) {
+	_, err := New("").ValidationBoundaryViolations()
 	if err == nil {
 		t.Fatal("expected error for empty root")
 	}

@@ -11,9 +11,15 @@ import (
 	"testing"
 )
 
-type DatabaseTestRules struct {
-	Root   string
-	Config rulekit.Config
+type Rules struct {
+	root   string
+	config rulekit.Config
+}
+
+// New creates rules for the supplied module root.
+func New(root string, options ...rulekit.Option) Rules {
+	values := rulekit.NewRuleOptions(root, options...)
+	return Rules{root: values.Root, config: values.Config}
 }
 
 type DatabaseTestViolation struct {
@@ -22,7 +28,7 @@ type DatabaseTestViolation struct {
 	Message string
 }
 
-func (r DatabaseTestRules) AssertDatabaseTestBoundary(t *testing.T) {
+func (r Rules) AssertDatabaseTestBoundary(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.DatabaseTestBoundaryViolations()
@@ -45,9 +51,9 @@ func (r DatabaseTestRules) AssertDatabaseTestBoundary(t *testing.T) {
 	t.Fatalf("invalid database test boundaries:\n  - %s", strings.Join(lines, "\n  - "))
 }
 
-func (r DatabaseTestRules) DatabaseTestBoundaryViolations() ([]DatabaseTestViolation, error) {
-	config := r.Config.WithDefaults()
-	root, err := r.root()
+func (r Rules) DatabaseTestBoundaryViolations() ([]DatabaseTestViolation, error) {
+	config := r.config.WithDefaults()
+	root, err := r.resolveRoot()
 	if err != nil {
 		return nil, err
 	}
@@ -99,18 +105,18 @@ func (r DatabaseTestRules) DatabaseTestBoundaryViolations() ([]DatabaseTestViola
 	return violations, nil
 }
 
-func (r DatabaseTestRules) root() (string, error) {
-	if r.Root == "" {
-		return "", errors.New("DatabaseTestRules.Root is empty")
+func (r Rules) resolveRoot() (string, error) {
+	if r.root == "" {
+		return "", errors.New("Rules.Root is empty")
 	}
-	if filepath.IsAbs(r.Root) {
-		return r.Root, nil
+	if filepath.IsAbs(r.root) {
+		return r.root, nil
 	}
 	projectRoot, err := rulekit.FindProjectRoot()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(projectRoot, r.Root), nil
+	return filepath.Join(projectRoot, r.root), nil
 }
 
 func databaseTestBoundaryAllowed(config rulekit.Config, path string) bool {

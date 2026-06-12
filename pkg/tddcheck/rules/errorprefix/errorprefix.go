@@ -11,11 +11,16 @@ import (
 	"testing"
 )
 
-// ModuleErrorRules declares naming rules for module errors.go files.
-type ModuleErrorRules struct {
-	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root   string
-	Config rulekit.Config
+// Rules declares naming rules for module errors.go files.
+type Rules struct {
+	root   string
+	config rulekit.Config
+}
+
+// New creates rules for the supplied module root.
+func New(root string, options ...rulekit.Option) Rules {
+	values := rulekit.NewRuleOptions(root, options...)
+	return Rules{root: values.Root, config: values.Config}
 }
 
 // ErrorPrefixViolation describes one error variable that does not match Err rules.
@@ -27,7 +32,7 @@ type ErrorPrefixViolation struct {
 
 // AssertErrorPrefix fails the test when a package-level error variable in
 // layered module errors.go does not start with Err.
-func (r ModuleErrorRules) AssertErrorPrefix(t *testing.T) {
+func (r Rules) AssertErrorPrefix(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.ErrorPrefixViolations()
@@ -53,8 +58,8 @@ func (r ModuleErrorRules) AssertErrorPrefix(t *testing.T) {
 
 // ErrorPrefixViolations returns all package-level error variables in module
 // errors.go files that do not start with Err.
-func (r ModuleErrorRules) ErrorPrefixViolations() ([]ErrorPrefixViolation, error) {
-	matches, err := rulekit.ModuleFiles(r.Root, "ModuleErrorRules", r.Config, func(name string) bool { return name == "errors.go" })
+func (r Rules) ErrorPrefixViolations() ([]ErrorPrefixViolation, error) {
+	matches, err := rulekit.ModuleFiles(r.root, "Rules", r.config, func(name string) bool { return name == "errors.go" })
 	if err != nil {
 		return nil, err
 	}

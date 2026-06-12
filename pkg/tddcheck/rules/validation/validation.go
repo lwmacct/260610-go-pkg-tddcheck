@@ -12,11 +12,16 @@ import (
 	"testing"
 )
 
-// ModuleValidationRules declares mechanical boundary rules for module validation.go files.
-type ModuleValidationRules struct {
-	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root   string
-	Config rulekit.Config
+// Rules declares mechanical boundary rules for module validation.go files.
+type Rules struct {
+	root   string
+	config rulekit.Config
+}
+
+// New creates rules for the supplied module root.
+func New(root string, options ...rulekit.Option) Rules {
+	values := rulekit.NewRuleOptions(root, options...)
+	return Rules{root: values.Root, config: values.Config}
 }
 
 // ValidationBoundaryViolation describes one validation boundary violation.
@@ -27,7 +32,7 @@ type ValidationBoundaryViolation struct {
 }
 
 // AssertValidationBoundaries fails the test when module validation boundaries are violated.
-func (r ModuleValidationRules) AssertValidationBoundaries(t *testing.T) {
+func (r Rules) AssertValidationBoundaries(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.ValidationBoundaryViolations()
@@ -52,8 +57,8 @@ func (r ModuleValidationRules) AssertValidationBoundaries(t *testing.T) {
 }
 
 // ValidationBoundaryViolations returns all module validation boundary violations.
-func (r ModuleValidationRules) ValidationBoundaryViolations() ([]ValidationBoundaryViolation, error) {
-	moduleDirs, err := rulekit.ModulePackageDirs(r.Root, "ModuleValidationRules", r.Config)
+func (r Rules) ValidationBoundaryViolations() ([]ValidationBoundaryViolation, error) {
+	moduleDirs, err := rulekit.ModulePackageDirs(r.root, "Rules", r.config)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +74,7 @@ func (r ModuleValidationRules) ValidationBoundaryViolations() ([]ValidationBound
 			if strings.HasSuffix(file, "_test.go") {
 				continue
 			}
-			fileViolations, err := validationBoundaryViolationsInFile(r.Config, file)
+			fileViolations, err := validationBoundaryViolationsInFile(r.config, file)
 			if err != nil {
 				return nil, err
 			}

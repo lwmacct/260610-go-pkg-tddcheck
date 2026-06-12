@@ -52,7 +52,7 @@ func ValidateTestName() error {
 }
 `)
 
-	violations, err := (ModulePublicAPIRules{Root: root}).PublicAPINameViolations()
+	violations, err := New(root).PublicAPINameViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,8 +69,8 @@ func ValidateTestName() error {
 	}
 }
 
-func TestModulePublicAPIRulesRequiresRoot(t *testing.T) {
-	_, err := (ModulePublicAPIRules{}).PublicAPINameViolations()
+func TestRulesRequiresRoot(t *testing.T) {
+	_, err := New("").PublicAPINameViolations()
 	if err == nil {
 		t.Fatal("expected error for empty root")
 	}

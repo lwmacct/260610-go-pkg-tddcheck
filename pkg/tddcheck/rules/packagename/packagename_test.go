@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestModulePackageNameRulesViolations(t *testing.T) {
+func TestRulesViolations(t *testing.T) {
 	root := t.TempDir()
 
 	testkit.WriteFile(t, root, "domain/identityuser/service.go", `package user
@@ -16,7 +16,7 @@ func TestModulePackageNameRulesViolations(t *testing.T) {
 	testkit.WriteFile(t, root, "domain/nodeaccesspolicy/service_test.go", `package nodeaccesspolicy_test
 `)
 
-	violations, err := (ModulePackageNameRules{Root: root}).PackageNameViolations()
+	violations, err := New(root).PackageNameViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -28,8 +28,8 @@ func TestModulePackageNameRulesViolations(t *testing.T) {
 	}
 }
 
-func TestModulePackageNameRulesRequiresRoot(t *testing.T) {
-	_, err := (ModulePackageNameRules{}).PackageNameViolations()
+func TestRulesRequiresRoot(t *testing.T) {
+	_, err := New("").PackageNameViolations()
 	if err == nil {
 		t.Fatal("expected error for empty root")
 	}

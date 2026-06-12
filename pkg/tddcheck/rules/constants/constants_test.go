@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestModuleConstantsRulesBoundaryViolations(t *testing.T) {
+func TestRulesBoundaryViolations(t *testing.T) {
 	root := t.TempDir()
 
 	testkit.WriteFile(t, root, "good/constants.go", `package good
@@ -25,7 +25,7 @@ func StateName() string { return State }
 const serviceState = "bad"
 `)
 
-	violations, err := (ModuleConstantsRules{Root: root}).ConstantsBoundaryViolations()
+	violations, err := New(root).ConstantsBoundaryViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,8 +42,8 @@ const serviceState = "bad"
 	}
 }
 
-func TestModuleConstantsRulesRequiresRoot(t *testing.T) {
-	_, err := (ModuleConstantsRules{}).ConstantsBoundaryViolations()
+func TestRulesRequiresRoot(t *testing.T) {
+	_, err := New("").ConstantsBoundaryViolations()
 	if err == nil {
 		t.Fatal("expected error for empty root")
 	}

@@ -12,11 +12,16 @@ import (
 	"testing"
 )
 
-// ModuleSchemaRules declares mechanical boundary rules for module schema.go files.
-type ModuleSchemaRules struct {
-	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root   string
-	Config rulekit.Config
+// Rules declares mechanical boundary rules for module schema.go files.
+type Rules struct {
+	root   string
+	config rulekit.Config
+}
+
+// New creates rules for the supplied module root.
+func New(root string, options ...rulekit.Option) Rules {
+	values := rulekit.NewRuleOptions(root, options...)
+	return Rules{root: values.Root, config: values.Config}
 }
 
 // SchemaBoundaryViolation describes one schema boundary violation.
@@ -27,7 +32,7 @@ type SchemaBoundaryViolation struct {
 }
 
 // AssertSchemaBoundaries fails the test when module schema boundaries are violated.
-func (r ModuleSchemaRules) AssertSchemaBoundaries(t *testing.T) {
+func (r Rules) AssertSchemaBoundaries(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.SchemaBoundaryViolations()
@@ -52,8 +57,8 @@ func (r ModuleSchemaRules) AssertSchemaBoundaries(t *testing.T) {
 }
 
 // SchemaBoundaryViolations returns all module schema boundary violations.
-func (r ModuleSchemaRules) SchemaBoundaryViolations() ([]SchemaBoundaryViolation, error) {
-	moduleDirs, err := rulekit.ModulePackageDirs(r.Root, "ModuleSchemaRules", r.Config)
+func (r Rules) SchemaBoundaryViolations() ([]SchemaBoundaryViolation, error) {
+	moduleDirs, err := rulekit.ModulePackageDirs(r.root, "Rules", r.config)
 	if err != nil {
 		return nil, err
 	}

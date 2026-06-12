@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestModuleSchemaRulesBoundaryViolations(t *testing.T) {
+func TestRulesBoundaryViolations(t *testing.T) {
 	root := t.TempDir()
 
 	testkit.WriteFile(t, root, "good/schema.go", `package good
@@ -41,7 +41,7 @@ func CreateIndexes() error { return nil }
 func (userSchema) ID() string { return "" }
 `)
 
-	violations, err := (ModuleSchemaRules{Root: root}).SchemaBoundaryViolations()
+	violations, err := New(root).SchemaBoundaryViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,8 +65,8 @@ func (userSchema) ID() string { return "" }
 	}
 }
 
-func TestModuleSchemaRulesRequiresRoot(t *testing.T) {
-	_, err := (ModuleSchemaRules{}).SchemaBoundaryViolations()
+func TestRulesRequiresRoot(t *testing.T) {
+	_, err := New("").SchemaBoundaryViolations()
 	if err == nil {
 		t.Fatal("expected error for empty root")
 	}

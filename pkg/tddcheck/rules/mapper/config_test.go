@@ -16,7 +16,7 @@ import "net/http"
 func ToUserDTO(_ *http.Request) UserDTO { return UserDTO{} }
 `)
 
-	defaultViolations, err := (ModuleMapperRules{Root: root}).MapperBoundaryViolations()
+	defaultViolations, err := New(root).MapperBoundaryViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -24,10 +24,7 @@ func ToUserDTO(_ *http.Request) UserDTO { return UserDTO{} }
 		t.Fatal("expected default forbidden import violation")
 	}
 
-	configuredViolations, err := (ModuleMapperRules{
-		Root:   root,
-		Config: rulekit.Config{MapperForbiddenImports: []string{}},
-	}).MapperBoundaryViolations()
+	configuredViolations, err := New(root, rulekit.WithConfig(rulekit.Config{MapperForbiddenImports: []string{}})).MapperBoundaryViolations()
 	if err != nil {
 		t.Fatal(err)
 	}

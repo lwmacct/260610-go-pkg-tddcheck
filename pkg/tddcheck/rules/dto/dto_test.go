@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestModuleDTORulesStructSuffixViolations(t *testing.T) {
+func TestRulesStructSuffixViolations(t *testing.T) {
 	root := t.TempDir()
 
 	testkit.WriteFile(t, root, "user/dto.go", `package user
@@ -26,7 +26,7 @@ type userPayload struct {}
 type ignoredHandlerInput struct {}
 `)
 
-	violations, err := (ModuleDTORules{Root: root}).StructSuffixViolations()
+	violations, err := New(root).StructSuffixViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +38,7 @@ type ignoredHandlerInput struct {}
 	}
 }
 
-func TestModuleDTORulesFuncViolations(t *testing.T) {
+func TestRulesFuncViolations(t *testing.T) {
 	root := t.TempDir()
 
 	testkit.WriteFile(t, root, "user/dto.go", `package user
@@ -62,7 +62,7 @@ func (dto UserDTO) Validate() error {
 func ignoredServiceFunc() {}
 `)
 
-	violations, err := (ModuleDTORules{Root: root}).FuncViolations()
+	violations, err := New(root).FuncViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +74,7 @@ func ignoredServiceFunc() {}
 	}
 }
 
-func TestModuleDTORulesFileOwnershipViolations(t *testing.T) {
+func TestRulesFileOwnershipViolations(t *testing.T) {
 	root := t.TempDir()
 
 	testkit.WriteFile(t, root, "user/dto.go", `package user
@@ -88,7 +88,7 @@ type createUserDTO struct {}
 type ignoredDTO = CreateUserDTO
 `)
 
-	violations, err := (ModuleDTORules{Root: root}).FileOwnershipViolations()
+	violations, err := New(root).FileOwnershipViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,8 +100,8 @@ type ignoredDTO = CreateUserDTO
 	}
 }
 
-func TestModuleDTORulesRequiresRoot(t *testing.T) {
-	_, err := (ModuleDTORules{}).StructSuffixViolations()
+func TestRulesRequiresRoot(t *testing.T) {
+	_, err := New("").StructSuffixViolations()
 	if err == nil {
 		t.Fatal("expected error for empty root")
 	}

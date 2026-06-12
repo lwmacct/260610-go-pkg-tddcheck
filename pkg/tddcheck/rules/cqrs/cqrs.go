@@ -10,11 +10,16 @@ import (
 	"testing"
 )
 
-// ModuleCQRSRules declares naming rules for module cqrs.go files.
-type ModuleCQRSRules struct {
-	// Root is the layered module root directory. Relative paths are resolved from go.mod.
-	Root   string
-	Config rulekit.Config
+// Rules declares naming rules for module cqrs.go files.
+type Rules struct {
+	root   string
+	config rulekit.Config
+}
+
+// New creates rules for the supplied module root.
+func New(root string, options ...rulekit.Option) Rules {
+	values := rulekit.NewRuleOptions(root, options...)
+	return Rules{root: values.Root, config: values.Config}
 }
 
 // CQRSSuffixViolation describes one struct name that does not match CQRS rules.
@@ -34,7 +39,7 @@ type CQRSInterfaceNameViolation struct {
 
 // AssertStructSuffix fails the test when a struct in layered module cqrs.go
 // does not end with Query, Result, or Command.
-func (r ModuleCQRSRules) AssertStructSuffix(t *testing.T) {
+func (r Rules) AssertStructSuffix(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.StructSuffixViolations()
@@ -60,7 +65,7 @@ func (r ModuleCQRSRules) AssertStructSuffix(t *testing.T) {
 
 // AssertInterfaceNames fails the test when an interface in layered module
 // cqrs.go does not express a use case contract or command/query dependency.
-func (r ModuleCQRSRules) AssertInterfaceNames(t *testing.T) {
+func (r Rules) AssertInterfaceNames(t *testing.T) {
 	t.Helper()
 
 	violations, err := r.InterfaceNameViolations()
@@ -87,8 +92,8 @@ func (r ModuleCQRSRules) AssertInterfaceNames(t *testing.T) {
 
 // StructSuffixViolations returns all struct names in module cqrs.go files that
 // do not end with Query, Result, or Command.
-func (r ModuleCQRSRules) StructSuffixViolations() ([]CQRSSuffixViolation, error) {
-	matches, err := rulekit.ModuleFiles(r.Root, "ModuleCQRSRules", r.Config, func(name string) bool { return name == "cqrs.go" })
+func (r Rules) StructSuffixViolations() ([]CQRSSuffixViolation, error) {
+	matches, err := rulekit.ModuleFiles(r.root, "Rules", r.config, func(name string) bool { return name == "cqrs.go" })
 	if err != nil {
 		return nil, err
 	}
@@ -107,8 +112,8 @@ func (r ModuleCQRSRules) StructSuffixViolations() ([]CQRSSuffixViolation, error)
 
 // InterfaceNameViolations returns all interface names in module cqrs.go files
 // that do not express a use case contract or command/query dependency.
-func (r ModuleCQRSRules) InterfaceNameViolations() ([]CQRSInterfaceNameViolation, error) {
-	matches, err := rulekit.ModuleFiles(r.Root, "ModuleCQRSRules", r.Config, func(name string) bool { return name == "cqrs.go" })
+func (r Rules) InterfaceNameViolations() ([]CQRSInterfaceNameViolation, error) {
+	matches, err := rulekit.ModuleFiles(r.root, "Rules", r.config, func(name string) bool { return name == "cqrs.go" })
 	if err != nil {
 		return nil, err
 	}

@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestModuleCQRSRulesStructSuffixViolations(t *testing.T) {
+func TestRulesStructSuffixViolations(t *testing.T) {
 	root := t.TempDir()
 
 	testkit.WriteFile(t, root, "user/cqrs.go", `package user
@@ -27,7 +27,7 @@ type UserOutput struct {}
 type Ignored struct {}
 `)
 
-	violations, err := (ModuleCQRSRules{Root: root}).StructSuffixViolations()
+	violations, err := New(root).StructSuffixViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,7 +39,7 @@ type Ignored struct {}
 	}
 }
 
-func TestModuleCQRSRulesInterfaceNameViolations(t *testing.T) {
+func TestRulesInterfaceNameViolations(t *testing.T) {
 	root := t.TempDir()
 
 	testkit.WriteFile(t, root, "user/cqrs.go", `package user
@@ -66,7 +66,7 @@ type UserValidator interface {}
 type IgnoredRepository interface {}
 `)
 
-	violations, err := (ModuleCQRSRules{Root: root}).InterfaceNameViolations()
+	violations, err := New(root).InterfaceNameViolations()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,8 +86,8 @@ type IgnoredRepository interface {}
 	}
 }
 
-func TestModuleCQRSRulesRequiresRoot(t *testing.T) {
-	_, err := (ModuleCQRSRules{}).StructSuffixViolations()
+func TestRulesRequiresRoot(t *testing.T) {
+	_, err := New("").StructSuffixViolations()
 	if err == nil {
 		t.Fatal("expected error for empty root")
 	}
