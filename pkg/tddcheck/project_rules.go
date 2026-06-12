@@ -9,24 +9,24 @@ import (
 	"time"
 
 	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rulekit"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/constants"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/context"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/cqrs"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/database"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/dto"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/entity"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/errorboundary"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/errorprefix"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/handler"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/layer"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/mapper"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/packagename"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/publicapi"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/repository"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/schema"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/service"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/utils"
-	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/validation"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/dependency/layer"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/file/constants"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/file/context"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/file/cqrs"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/file/dto"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/file/entity"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/file/errors"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/file/handler"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/file/mapper"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/file/repository"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/file/schema"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/file/service"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/file/utils"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/file/validation"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/name/errorprefix"
+	packagename "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/name/package"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/name/publicapi"
+	"github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/test/database"
 )
 
 // Violation is a normalized architecture rule violation.
@@ -117,59 +117,59 @@ func (r ProjectRules) Check() Result {
 		return add(rule, values, err)
 	}
 
-	if err := run("layer", checkLayer); err != nil {
+	if err := run("dependency-layer", checkLayer); err != nil {
 		return resultError(err, violations, start)
 	}
-	if err := run("package-name", checkPackageName); err != nil {
+	if err := run("name-package", checkPackageName); err != nil {
 		return resultError(err, violations, start)
 	}
-	if err := run("constants", checkConstants); err != nil {
+	if err := run("file-constants", checkConstants); err != nil {
 		return resultError(err, violations, start)
 	}
-	if err := run("entity", checkEntity); err != nil {
+	if err := run("file-entity", checkEntity); err != nil {
 		return resultError(err, violations, start)
 	}
-	if err := run("errors", checkErrors); err != nil {
+	if err := run("file-errors", checkErrors); err != nil {
 		return resultError(err, violations, start)
 	}
-	if err := run("error-prefix", checkErrorPrefix); err != nil {
+	if err := run("name-error-prefix", checkErrorPrefix); err != nil {
 		return resultError(err, violations, start)
 	}
-	if err := run("context", checkContext); err != nil {
+	if err := run("file-context", checkContext); err != nil {
 		return resultError(err, violations, start)
 	}
-	if err := run("cqrs", checkCQRS); err != nil {
+	if err := run("file-cqrs", checkCQRS); err != nil {
 		return resultError(err, violations, start)
 	}
-	if err := run("dto", checkDTO); err != nil {
+	if err := run("file-dto", checkDTO); err != nil {
 		return resultError(err, violations, start)
 	}
-	if err := run("mapper", checkMapper); err != nil {
+	if err := run("file-mapper", checkMapper); err != nil {
 		return resultError(err, violations, start)
 	}
-	if err := run("public-api", checkPublicAPI); err != nil {
+	if err := run("name-public-api", checkPublicAPI); err != nil {
 		return resultError(err, violations, start)
 	}
-	if err := run("service", checkService); err != nil {
+	if err := run("file-service", checkService); err != nil {
 		return resultError(err, violations, start)
 	}
-	if err := run("validation", checkValidation); err != nil {
+	if err := run("file-validation", checkValidation); err != nil {
 		return resultError(err, violations, start)
 	}
-	if err := run("handler", checkHandler); err != nil {
+	if err := run("file-handler", checkHandler); err != nil {
 		return resultError(err, violations, start)
 	}
-	if err := run("repository", checkRepository); err != nil {
+	if err := run("file-repository", checkRepository); err != nil {
 		return resultError(err, violations, start)
 	}
-	if err := run("schema", checkSchema); err != nil {
+	if err := run("file-schema", checkSchema); err != nil {
 		return resultError(err, violations, start)
 	}
-	if err := run("utils", checkUtils); err != nil {
+	if err := run("file-utils", checkUtils); err != nil {
 		return resultError(err, violations, start)
 	}
 	if r.IncludeDatabaseTests {
-		if err := run("database-test", checkDatabaseTests); err != nil {
+		if err := run("test-database", checkDatabaseTests); err != nil {
 			return resultError(err, violations, start)
 		}
 	}
@@ -195,41 +195,41 @@ func resultError(err error, violations []Violation, start time.Time) Result {
 
 func checkLayer(root string, config Config) ([]Violation, error) {
 	values, err := layer.New(root, rulekit.WithConfig(config)).LayerDependencyViolations()
-	return mapViolations("layer", values, err, func(v layer.LayerDependencyViolation) Violation {
-		return Violation{Rule: "layer", File: v.File, Line: v.Line, Message: v.Message + ": " + v.ImportPath}
+	return mapViolations("dependency-layer", values, err, func(v layer.LayerDependencyViolation) Violation {
+		return Violation{Rule: "dependency-layer", File: v.File, Line: v.Line, Message: v.Message + ": " + v.ImportPath}
 	})
 }
 
 func checkPackageName(root string, config Config) ([]Violation, error) {
 	values, err := packagename.New(root, rulekit.WithConfig(config)).PackageNameViolations()
-	return mapMessageViolations("package-name", values, err)
+	return mapMessageViolations("name-package", values, err)
 }
 
 func checkConstants(root string, config Config) ([]Violation, error) {
 	values, err := constants.New(root, rulekit.WithConfig(config)).ConstantsBoundaryViolations()
-	return mapMessageViolations("constants", values, err)
+	return mapMessageViolations("file-constants", values, err)
 }
 
 func checkEntity(root string, config Config) ([]Violation, error) {
 	values, err := entity.New(root, rulekit.WithConfig(config)).EntityBoundaryViolations()
-	return mapMessageViolations("entity", values, err)
+	return mapMessageViolations("file-entity", values, err)
 }
 
 func checkErrors(root string, config Config) ([]Violation, error) {
-	values, err := errorboundary.New(root, rulekit.WithConfig(config)).ErrorsBoundaryViolations()
-	return mapMessageViolations("errors", values, err)
+	values, err := errors.New(root, rulekit.WithConfig(config)).ErrorsBoundaryViolations()
+	return mapMessageViolations("file-errors", values, err)
 }
 
 func checkErrorPrefix(root string, config Config) ([]Violation, error) {
 	values, err := errorprefix.New(root, rulekit.WithConfig(config)).ErrorPrefixViolations()
-	return mapViolations("error-prefix", values, err, func(v errorprefix.ErrorPrefixViolation) Violation {
-		return Violation{Rule: "error-prefix", File: v.File, Line: v.Line, Message: fmt.Sprintf("error variable %s must start with Err", v.Name)}
+	return mapViolations("name-error-prefix", values, err, func(v errorprefix.ErrorPrefixViolation) Violation {
+		return Violation{Rule: "name-error-prefix", File: v.File, Line: v.Line, Message: fmt.Sprintf("error variable %s must start with Err", v.Name)}
 	})
 }
 
 func checkContext(root string, config Config) ([]Violation, error) {
 	values, err := context.New(root, rulekit.WithConfig(config)).ContextBoundaryViolations()
-	return mapMessageViolations("context", values, err)
+	return mapMessageViolations("file-context", values, err)
 }
 
 func checkCQRS(root string, config Config) ([]Violation, error) {
@@ -241,7 +241,7 @@ func checkCQRS(root string, config Config) ([]Violation, error) {
 	}
 	for _, violation := range structs {
 		violations = append(violations, Violation{
-			Rule:    "cqrs",
+			Rule:    "file-cqrs",
 			File:    violation.File,
 			Line:    violation.Line,
 			Message: fmt.Sprintf("struct %s must end with Query, Result, or Command", violation.Name),
@@ -253,7 +253,7 @@ func checkCQRS(root string, config Config) ([]Violation, error) {
 	}
 	for _, violation := range interfaces {
 		violations = append(violations, Violation{
-			Rule:    "cqrs",
+			Rule:    "file-cqrs",
 			File:    violation.File,
 			Line:    violation.Line,
 			Message: fmt.Sprintf("interface %s %s", violation.Name, violation.Message),
@@ -271,7 +271,7 @@ func checkDTO(root string, config Config) ([]Violation, error) {
 	}
 	for _, violation := range structs {
 		violations = append(violations, Violation{
-			Rule:    "dto",
+			Rule:    "file-dto",
 			File:    violation.File,
 			Line:    violation.Line,
 			Message: fmt.Sprintf("struct %s must end with DTO or DTOs", violation.Name),
@@ -283,7 +283,7 @@ func checkDTO(root string, config Config) ([]Violation, error) {
 	}
 	for _, violation := range funcs {
 		violations = append(violations, Violation{
-			Rule:    "dto",
+			Rule:    "file-dto",
 			File:    violation.File,
 			Line:    violation.Line,
 			Message: "dto.go must not declare func " + violation.Name,
@@ -295,7 +295,7 @@ func checkDTO(root string, config Config) ([]Violation, error) {
 	}
 	for _, violation := range owned {
 		violations = append(violations, Violation{
-			Rule:    "dto",
+			Rule:    "file-dto",
 			File:    violation.File,
 			Line:    violation.Line,
 			Message: fmt.Sprintf("DTO struct %s must be declared in dto.go", violation.Name),
@@ -306,47 +306,47 @@ func checkDTO(root string, config Config) ([]Violation, error) {
 
 func checkMapper(root string, config Config) ([]Violation, error) {
 	values, err := mapper.New(root, rulekit.WithConfig(config)).MapperBoundaryViolations()
-	return mapMessageViolations("mapper", values, err)
+	return mapMessageViolations("file-mapper", values, err)
 }
 
 func checkPublicAPI(root string, config Config) ([]Violation, error) {
 	values, err := publicapi.New(root, rulekit.WithConfig(config)).PublicAPINameViolations()
-	return mapMessageViolations("public-api", values, err)
+	return mapMessageViolations("name-public-api", values, err)
 }
 
 func checkService(root string, config Config) ([]Violation, error) {
 	values, err := service.New(root, rulekit.WithConfig(config)).ServiceBoundaryViolations()
-	return mapMessageViolations("service", values, err)
+	return mapMessageViolations("file-service", values, err)
 }
 
 func checkValidation(root string, config Config) ([]Violation, error) {
 	values, err := validation.New(root, rulekit.WithConfig(config)).ValidationBoundaryViolations()
-	return mapMessageViolations("validation", values, err)
+	return mapMessageViolations("file-validation", values, err)
 }
 
 func checkHandler(root string, config Config) ([]Violation, error) {
 	values, err := handler.New(root, rulekit.WithConfig(config)).HandlerBoundaryViolations()
-	return mapMessageViolations("handler", values, err)
+	return mapMessageViolations("file-handler", values, err)
 }
 
 func checkRepository(root string, config Config) ([]Violation, error) {
 	values, err := repository.New(root, rulekit.WithConfig(config)).RepositoryBoundaryViolations()
-	return mapMessageViolations("repository", values, err)
+	return mapMessageViolations("file-repository", values, err)
 }
 
 func checkSchema(root string, config Config) ([]Violation, error) {
 	values, err := schema.New(root, rulekit.WithConfig(config)).SchemaBoundaryViolations()
-	return mapMessageViolations("schema", values, err)
+	return mapMessageViolations("file-schema", values, err)
 }
 
 func checkUtils(root string, config Config) ([]Violation, error) {
 	values, err := utils.New(root, rulekit.WithConfig(config)).UtilsBoundaryViolations()
-	return mapMessageViolations("utils", values, err)
+	return mapMessageViolations("file-utils", values, err)
 }
 
 func checkDatabaseTests(root string, config Config) ([]Violation, error) {
 	values, err := database.New(root, rulekit.WithConfig(config)).DatabaseTestBoundaryViolations()
-	return mapMessageViolations("database-test", values, err)
+	return mapMessageViolations("test-database", values, err)
 }
 
 func mapMessageViolations[T any](rule string, values []T, err error) ([]Violation, error) {

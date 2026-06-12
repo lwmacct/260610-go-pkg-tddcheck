@@ -36,10 +36,10 @@ func TestArchitecture(t *testing.T) {
 
 `Root` 可以是绝对路径，也可以是相对最近 `go.mod` 的路径。省略时默认检查 `internal`。
 
-推荐入口是项目级检查。需要只运行某条检测时，可以直接使用 `pkg/tddcheck/rules/<rule>` 下的子包；共享的扫描和配置基础设施位于 `pkg/tddcheck/rulekit`。
+推荐入口是项目级检查。需要只运行某条检测时，可以直接使用 `pkg/tddcheck/rules/<category>/<rule>` 下的子包；共享的扫描和配置基础设施位于 `pkg/tddcheck/rulekit`。
 
 ```go
-import "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/layer"
+import "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/dependency/layer"
 
 func TestLayerDependencies(t *testing.T) {
     layer.New("internal").Assert(t)
@@ -56,9 +56,9 @@ package tddcheck_test
 import (
     "testing"
 
-    "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/database"
-    "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/dto"
-    "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/layer"
+    "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/test/database"
+    "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/file/dto"
+    "github.com/lwmacct/260610-go-pkg-tddcheck/pkg/tddcheck/rules/dependency/layer"
 )
 
 type assertRule interface {
@@ -70,9 +70,9 @@ func TestRules(t *testing.T) {
         name string
         rule assertRule
     }{
-        {"layer", layer.New("internal")},
-        {"dto", dto.New("internal")},
-        {"database-test", database.New(".")},
+        {"dependency-layer", layer.New("internal")},
+        {"file-dto", dto.New("internal")},
+        {"test-database", database.New(".")},
     }
 
     for _, test := range tests {
@@ -87,29 +87,29 @@ func TestRules(t *testing.T) {
 
 ```bash
 go test ./internal/testutil/tddcheck
-go test ./internal/testutil/tddcheck -run 'TestRules/layer'
+go test ./internal/testutil/tddcheck -run 'TestRules/file-dto'
 ```
 
 ## 默认项目规则
 
 `ProjectRules` 默认运行以下检查：
 
-- `layer`：`domain`、`usecase`、`adapter`、`runtime`、`infra` 的 import 遵守依赖方向。
-- `package-name`：包名与目录名一致。
-- `constants`：包级常量必须放在 `constants.go`。
-- `entity`：具体实体和值对象类型必须放在 `entity.go`。
-- `error-boundary` 和 `error-prefix`：包级错误必须放在 `errors.go`，并使用 `Err*` 命名。
-- `context`：context helper 和 `context.WithValue` 使用必须放在 `context.go`。
-- `cqrs`：CQRS 结构体和接口使用明确后缀。
-- `dto`：DTO 结构体必须放在 `dto.go`，使用 `DTO` 或 `DTOs` 后缀，并且 `dto.go` 不能声明函数。
-- `mapper`：mapper 函数必须是 `mapper.go` 中的纯 `To*` 转换。
-- `public-api`：导出 API 避免使用 `Validate*`、`Normalize*` 等内部职责前缀。
-- `service`：`Service`、`NewService` 和 `Service` 方法留在 service 文件中。
-- `validation`：校验 helper 必须放在 `validation.go`，并使用私有 `validate*` 或 `normalize*` 命名。
-- `handler`：协议 handler 不能承载持久化职责。
-- `repository`：repository 不能承载协议职责或 DTO 映射职责。
-- `schema`：schema 文件专用于存储 schema 定义。
-- `utils`：私有 `util*` helper 必须放在 `utils.go`。
+- `dependency-layer`：`domain`、`usecase`、`adapter`、`runtime`、`infra` 的 import 遵守依赖方向。
+- `name-package`：包名与目录名一致。
+- `file-constants`：包级常量必须放在 `constants.go`。
+- `file-entity`：具体实体和值对象类型必须放在 `entity.go`。
+- `file-errors` 和 `name-error-prefix`：包级错误必须放在 `errors.go`，并使用 `Err*` 命名。
+- `file-context`：context helper 和 `context.WithValue` 使用必须放在 `context.go`。
+- `file-cqrs`：CQRS 结构体和接口使用明确后缀。
+- `file-dto`：DTO 结构体必须放在 `dto.go`，使用 `DTO` 或 `DTOs` 后缀，并且 `dto.go` 不能声明函数。
+- `file-mapper`：mapper 函数必须是 `mapper.go` 中的纯 `To*` 转换。
+- `name-public-api`：导出 API 避免使用 `Validate*`、`Normalize*` 等内部职责前缀。
+- `file-service`：`Service`、`NewService` 和 `Service` 方法留在 service 文件中。
+- `file-validation`：校验 helper 必须放在 `validation.go`，并使用私有 `validate*` 或 `normalize*` 命名。
+- `file-handler`：协议 handler 不能承载持久化职责。
+- `file-repository`：repository 不能承载协议职责或 DTO 映射职责。
+- `file-schema`：schema 文件专用于存储 schema 定义。
+- `file-utils`：私有 `util*` helper 必须放在 `utils.go`。
 
 数据库测试边界检查是可选项：
 

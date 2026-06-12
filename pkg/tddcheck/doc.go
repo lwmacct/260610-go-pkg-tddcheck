@@ -13,5 +13,5 @@
 //
 // Project-specific policy can be customized through Config. ProjectRules is the
 // recommended public entry point; individual rules are available under
-// pkg/tddcheck/rules for focused checks.
+// pkg/tddcheck/rules/<category>/<rule> for focused checks.
 package tddcheck

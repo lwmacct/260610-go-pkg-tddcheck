@@ -1,4 +1,4 @@
-package errorboundary
+package errors
 
 import (
 	"reflect"

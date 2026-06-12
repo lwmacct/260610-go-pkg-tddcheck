@@ -38,7 +38,7 @@ const state = "bad"
 		t.Fatal("expected violations")
 	}
 	text := result.Text()
-	for _, want := range []string{"tddcheck: failed", "[constants]", "[package-name]"} {
+	for _, want := range []string{"tddcheck: failed", "[file-constants]", "[name-package]"} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("result text missing %q:\n%s", want, text)
 		}
