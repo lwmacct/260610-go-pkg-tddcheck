@@ -31,3 +31,7 @@ cache/**
 
 # AI/browser tools
 .playwright-mcp
+
+# Go workspace
+go.work
+go.work.sum

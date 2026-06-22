@@ -101,6 +101,64 @@ type ignoredDTO = CreateUserDTO
 	}
 }
 
+func TestRulesRequestsFileViolations(t *testing.T) {
+	root := t.TempDir()
+
+	testkit.WriteFile(t, root, "user/requests.go", `package user
+
+type CreateUserRequest struct {}
+`)
+	testkit.WriteFile(t, root, "user/dto.go", `package user
+
+type CreateUserDTO struct {}
+`)
+
+	violations, err := New(root).RequestsFileViolations()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(violations) != 1 {
+		t.Fatalf("violations len = %d, want 1", len(violations))
+	}
+}
+
+func TestRulesProtocolTagViolations(t *testing.T) {
+	root := t.TempDir()
+
+	testkit.WriteFile(t, root, "user/dto.go", `package user
+
+type CreateUserDTO struct {
+	Name string `+"`json:\"name\"`"+`
+}
+`)
+	testkit.WriteFile(t, root, "bad/service.go", `package bad
+
+type CreateUserRequest struct {
+	Name string `+"`json:\"name\"`"+`
+}
+
+type QueryInput struct {
+	ID string `+"`query:\"id\"`"+`
+}
+
+type DomainCommand struct {
+	Name string
+}
+`)
+
+	violations, err := New(root).ProtocolTagViolations()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := protocolTagViolationNames(violations)
+	want := []string{"CreateUserRequest", "QueryInput"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("violations = %v, want %v", got, want)
+	}
+}
+
 func TestRulesRequiresRoot(t *testing.T) {
 	_, err := New("").StructSuffixViolations()
 	if err == nil {
@@ -125,6 +183,14 @@ func dtoFuncViolationNames(violations []DTOFuncViolation) []string {
 }
 
 func dtoFileViolationNames(violations []DTOFileViolation) []string {
+	names := make([]string, 0, len(violations))
+	for _, violation := range violations {
+		names = append(names, violation.Name)
+	}
+	return names
+}
+
+func protocolTagViolationNames(violations []ProtocolTagViolation) []string {
 	names := make([]string, 0, len(violations))
 	for _, violation := range violations {
 		names = append(names, violation.Name)
